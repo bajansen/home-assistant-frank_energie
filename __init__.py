@@ -1,0 +1,1 @@
+"""The Frank Energie component."""
