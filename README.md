@@ -32,8 +32,8 @@ sensor:
       display_options:
         - gas_markup
         - elec_markup
-		- gas_market
-		- elec_market
+        - gas_market
+        - elec_market
         - gas_min
         - gas_max
         - elec_min
