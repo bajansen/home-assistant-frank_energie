@@ -20,7 +20,7 @@ action:
 mode: single
 ```
 ## Installatie
-Download deze repository en plaats de inhoud in de `custom_components` map binnen je Home Assistant installatie.
+Plaats de map `frank_energie` uit de map `custom_components` binnen deze repo in de `custom_components` map van je Home Assistant installatie.
 
 ### Configuratie
 
