@@ -22,6 +22,10 @@ mode: single
 ## Installatie
 Plaats de map `frank_energie` uit de map `custom_components` binnen deze repo in de `custom_components` map van je Home Assistant installatie.
 
+### HACS
+
+Installatie via HACS is mogelijk door deze repository toe te voegen als [custom repository](https://hacs.xyz/docs/faq/custom_repositories) met de categorie 'Integratie'.
+
 ### Configuratie
 
 De plugin en sensoren worden per stuk geconfigureerd in `configuration.yaml`.
