@@ -93,7 +93,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
     """Set up the Frank Energie sensors."""
-    _LOGGER.warning("Setting up Frank")
+    _LOGGER.debug("Setting up Frank")
 
     websession = async_get_clientsession(hass)
 
@@ -135,7 +135,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         """Get the latest data and updates the states."""
 
         if self.data._elec_data and self.data._gas_data:
-            _LOGGER.warning("updating sensors")
+            _LOGGER.debug("updating sensors")
 
             elec = self.get_current_hourprices(self.data._elec_data)
             gas = self.get_current_hourprices(self.data._gas_data)
@@ -188,7 +188,7 @@ class FrankEnergieData:
 
     async def async_fetch_data(self) -> None:
         """Get the latest data from Frank Energie"""
-        _LOGGER.warning("Fetching Frank Energie data")
+        _LOGGER.debug("Fetching Frank Energie data")
         today = date.today()
         tomorrow = today + timedelta(days = 2)
         query_data = {	"query": "query MarketPrices($startDate: Date!, $endDate: Date!) { marketPricesElectricity(startDate: $startDate, endDate: $endDate) { from till marketPrice priceIncludingMarkup } marketPricesGas(startDate: $startDate, endDate: $endDate) { from till marketPrice priceIncludingMarkup } }",
