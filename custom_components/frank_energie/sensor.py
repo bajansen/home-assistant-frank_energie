@@ -16,6 +16,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
+    CURRENCY_EURO,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -35,47 +38,47 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="elec_markup",
         name="Current electricity price (All-in)",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="elec_market",
         name="Current electricity market price",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="gas_markup",
         name="Current gas price (All-in)",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
     ),
     SensorEntityDescription(
         key="gas_market",
         name="Current gas market price",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
     ),
     SensorEntityDescription(
         key="gas_min",
         name="Lowest gas price today",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
     ),
     SensorEntityDescription(
         key="gas_max",
         name="Highest gas price today",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
     ),
     SensorEntityDescription(
         key="elec_min",
         name="Lowest energy price today",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="elec_max",
         name="Highest energy price today",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
         key="elec_avg",
         name="Average electricity price today",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
 )
 
