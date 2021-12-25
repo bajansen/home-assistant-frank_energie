@@ -2,6 +2,8 @@
   "domain": "frank_energie",
   "name": "Frank Energie",
   "codeowners": ["@bajansen"],
+  "documentation": "https://github.com/bajansen/home-assistant-frank_energie",
+  "issue_tracker": "https://github.com/bajansen/home-assistant-frank_energie/issues",
   "iot_class": "cloud_polling",
   "version": "0.0.1"
 }
