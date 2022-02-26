@@ -46,6 +46,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
     ),
     SensorEntityDescription(
+        key="elec_tax",
+        name="Current electricity price including tax",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+    ),
+    SensorEntityDescription(
         key="gas_markup",
         name="Current gas price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
@@ -53,6 +58,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="gas_market",
         name="Current gas market price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+    ),
+    SensorEntityDescription(
+        key="gas_tax",
+        name="Current gas price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
     ),
     SensorEntityDescription(
@@ -150,10 +160,14 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
                 self._attr_native_value = elec[1]
             elif sensor_type == "elec_market":
                 self._attr_native_value = elec[0]
+            elif sensor_type == "elec_tax":
+                self._attr_native_value = elec[0] + elec[2]
             elif sensor_type == "gas_markup":
                 self._attr_native_value = gas[1]
             elif sensor_type == "gas_market":
                 self._attr_native_value = gas[0]
+            elif sensor_type == "gas_tax":
+                self._attr_native_value = gas[0] + gas[2]
             elif sensor_type == "gas_max":
                 self._attr_native_value = max(today_gas)
             elif sensor_type == "gas_min":
@@ -171,7 +185,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
         for hour in hourprices:
             if hour['from'] == current_hour:
-                return hour['marketPrice'], hour['priceIncludingMarkup']
+                return hour['marketPrice'], hour['priceIncludingMarkup'], hour['marketPriceTax']
 
     def get_hourprices(self, hourprices) -> List:
         today_prices = []
@@ -192,9 +206,10 @@ class FrankEnergieData:
     async def async_fetch_data(self) -> None:
         """Get the latest data from Frank Energie"""
         _LOGGER.debug("Fetching Frank Energie data")
+        # We request data for today up until the day after tomorrow. This is to ensure we always request all available data.
         today = date.today()
         tomorrow = today + timedelta(days = 2)
-        query_data = {	"query": "query MarketPrices($startDate: Date!, $endDate: Date!) { marketPricesElectricity(startDate: $startDate, endDate: $endDate) { from till marketPrice priceIncludingMarkup } marketPricesGas(startDate: $startDate, endDate: $endDate) { from till marketPrice priceIncludingMarkup } }",
+        query_data = {	"query": "query MarketPrices($startDate: Date!, $endDate: Date!) { marketPricesElectricity(startDate: $startDate, endDate: $endDate) { from till marketPrice marketPriceTax priceIncludingMarkup } marketPricesGas(startDate: $startDate, endDate: $endDate) { from till marketPrice marketPriceTax priceIncludingMarkup } }",
             "variables": { "startDate":str(today),"endDate":str(tomorrow) },
             "operationName": "MarketPrices"
         }
