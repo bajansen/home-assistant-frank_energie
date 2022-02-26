@@ -34,10 +34,12 @@ De plugin en sensoren worden per stuk geconfigureerd in `configuration.yaml`.
 sensor:
   - platform: frank_energie
     display_options:
-      - gas_markup
-      - elec_markup
       - gas_market
+      - gas_tax
+      - gas_markup
       - elec_market
+      - elec_tax
+      - elec_markup
       - gas_min
       - gas_max
       - elec_min
