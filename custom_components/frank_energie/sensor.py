@@ -180,8 +180,11 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
                 self._attr_native_value = round(sum(today_elec) / len(today_elec), 5)
 
     def get_current_hourprices(self, hourprices) -> Tuple:
-        # hack to compare to datestring in json data
-        current_hour = str(datetime.utcnow().replace(microsecond=0,second=0,minute=0).isoformat()) + '.000Z'
+        # hack to compare to datestring in json data        
+        # additional hack to fix prices during DST
+        hour_offset = 2
+        current_hour = datetime.utcnow() + timedelta(hours = hour_offset)
+        current_hour = str(current_hour.replace(microsecond=0,second=0,minute=0).isoformat()) + '.000Z'
 
         for hour in hourprices:
             if hour['from'] == current_hour:
