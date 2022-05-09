@@ -182,7 +182,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     def get_current_hourprices(self, hourprices) -> Tuple:
         # hack to compare to datestring in json data        
         # additional hack to fix prices during DST
-        hour_offset = 1
+        hour_offset = 0
         current_hour = datetime.utcnow() + timedelta(hours = hour_offset)
         current_hour = str(current_hour.replace(microsecond=0,second=0,minute=0).isoformat()) + '.000Z'
 
