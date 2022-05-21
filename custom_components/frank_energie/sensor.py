@@ -27,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import utcnow
+from homeassistant.util import dt, utcnow
 
 ATTRIBUTION = "Data provided by Frank Energie"
 DOMAIN = "frank_energie"
@@ -148,7 +148,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
 
-    def __init__(self, coordinator, description: FrankEnergieEntityDescription) -> None:
+    def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
@@ -231,14 +231,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         }
 
     def get_current_hourprices(self, hourprices) -> Tuple:
-        # hack to compare to datestring in json data
-        # additional hack to fix prices during DST
-        hour_offset = 0
-        current_hour = datetime.utcnow() + timedelta(hours=hour_offset)
-        current_hour = str(current_hour.replace(microsecond=0, second=0, minute=0).isoformat()) + '.000Z'
-
         for hour in hourprices:
-            if hour['from'] == current_hour:
+            if dt.parse_datetime(hour['from']) < dt.utcnow() < dt.parse_datetime(hour['till']):
                 return hour['marketPrice'], hour['marketPriceTax'], hour['sourcingMarkupPrice'], hour['energyTaxPrice']
 
     def get_hourprices(self, hourprices) -> List:
