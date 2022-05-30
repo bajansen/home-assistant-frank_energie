@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import logging
 from typing import Callable, List, Tuple
 
@@ -171,7 +171,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         self._unsub_update = event.async_track_point_in_utc_time(
             self.hass,
             self._update_job,
-            utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1),
+            utcnow().replace(minute=0, second=0) + timedelta(hours=1),
         )
 
 
@@ -232,7 +232,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
     def get_current_hourprices(self, hourprices) -> Tuple:
         for hour in hourprices:
-            if dt.parse_datetime(hour['from']) < dt.utcnow() < dt.parse_datetime(hour['till']):
+            if dt.parse_datetime(hour['from']) <= dt.utcnow() < dt.parse_datetime(hour['till']):
                 return hour['marketPrice'], hour['marketPriceTax'], hour['sourcingMarkupPrice'], hour['energyTaxPrice']
 
     def get_hourprices(self, hourprices) -> List:
