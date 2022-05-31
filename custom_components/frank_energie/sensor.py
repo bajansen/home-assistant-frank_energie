@@ -199,10 +199,23 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         """Get the latest data from Frank Energie"""
         self.logger.debug("Fetching Frank Energie data")
 
-        # We request data for yesterday up until the day after tomorrow.
+        # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
-        yesterday = date.today() - timedelta(days=1)
-        tomorrow = date.today() + timedelta(days=2)
+        today = date.today()
+        tomorrow = today + timedelta(days=1)
+        day_after_tomorrow = today + timedelta(days=2)
+
+        # Fetch data for today and tomorrow separately,
+        # because the gas prices response only contains data for the first day of the query
+        data_today = await self._run_graphql_query(today, tomorrow)
+        data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
+
+        return {
+            'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
+            'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
+        }
+
+    async def _run_graphql_query(self, start_date, end_date):
         query_data = {
             "query": """
                 query MarketPrices($startDate: Date!, $endDate: Date!) {
@@ -214,7 +227,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                      } 
                 }
             """,
-            "variables": {"startDate": str(yesterday), "endDate": str(tomorrow)},
+            "variables": {"startDate": str(start_date), "endDate": str(end_date)},
             "operationName": "MarketPrices"
         }
         try:
