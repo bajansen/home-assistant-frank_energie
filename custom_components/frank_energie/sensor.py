@@ -199,10 +199,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         """Get the latest data from Frank Energie"""
         self.logger.debug("Fetching Frank Energie data")
 
-        # We request data for today up until the day after tomorrow.
+        # We request data for yesterday up until the day after tomorrow.
         # This is to ensure we always request all available data.
-        today = date.today()
-        tomorrow = today + timedelta(days=2)
+        yesterday = date.today() - timedelta(days=1)
+        tomorrow = date.today() + timedelta(days=2)
         query_data = {
             "query": """
                 query MarketPrices($startDate: Date!, $endDate: Date!) {
@@ -214,7 +214,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                      } 
                 }
             """,
-            "variables": {"startDate": str(today), "endDate": str(tomorrow)},
+            "variables": {"startDate": str(yesterday), "endDate": str(tomorrow)},
             "operationName": "MarketPrices"
         }
         try:
