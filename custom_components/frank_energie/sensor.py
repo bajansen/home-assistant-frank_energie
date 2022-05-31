@@ -160,7 +160,11 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
-        self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+        try:
+            self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+        except (TypeError, IndexError):
+            # No data available
+            self._attr_native_value = None
 
         # Cancel the currently scheduled event if there is any
         if self._unsub_update:
