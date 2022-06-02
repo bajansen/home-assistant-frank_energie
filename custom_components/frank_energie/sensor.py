@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Callable, List, Tuple
 
@@ -201,7 +201,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
         # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
-        today = date.today()
+        today = datetime.utcnow().date()
         tomorrow = today + timedelta(days=1)
         day_after_tomorrow = today + timedelta(days=2)
 
