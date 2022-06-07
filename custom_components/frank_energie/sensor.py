@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Callable, List, Tuple
 
@@ -160,7 +160,11 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
-        self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+        try:
+            self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+        except (TypeError, IndexError):
+            # No data available
+            self._attr_native_value = None
 
         # Cancel the currently scheduled event if there is any
         if self._unsub_update:
@@ -171,7 +175,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         self._unsub_update = event.async_track_point_in_utc_time(
             self.hass,
             self._update_job,
-            utcnow().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1),
+            utcnow().replace(minute=0, second=0) + timedelta(hours=1),
         )
 
 
@@ -197,8 +201,21 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
         # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
-        today = date.today()
-        tomorrow = today + timedelta(days=2)
+        today = datetime.utcnow().date()
+        tomorrow = today + timedelta(days=1)
+        day_after_tomorrow = today + timedelta(days=2)
+
+        # Fetch data for today and tomorrow separately,
+        # because the gas prices response only contains data for the first day of the query
+        data_today = await self._run_graphql_query(today, tomorrow)
+        data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
+
+        return {
+            'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
+            'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
+        }
+
+    async def _run_graphql_query(self, start_date, end_date):
         query_data = {
             "query": """
                 query MarketPrices($startDate: Date!, $endDate: Date!) {
@@ -210,7 +227,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                      } 
                 }
             """,
-            "variables": {"startDate": str(today), "endDate": str(tomorrow)},
+            "variables": {"startDate": str(start_date), "endDate": str(end_date)},
             "operationName": "MarketPrices"
         }
         try:
@@ -232,7 +249,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
     def get_current_hourprices(self, hourprices) -> Tuple:
         for hour in hourprices:
-            if dt.parse_datetime(hour['from']) < dt.utcnow() < dt.parse_datetime(hour['till']):
+            if dt.parse_datetime(hour['from']) <= dt.utcnow() < dt.parse_datetime(hour['till']):
                 return hour['marketPrice'], hour['marketPriceTax'], hour['sourcingMarkupPrice'], hour['energyTaxPrice']
 
     def get_hourprices(self, hourprices) -> List:
