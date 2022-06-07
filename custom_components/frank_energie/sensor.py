@@ -125,7 +125,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None) -> None:
     """Set up the Frank Energie sensors."""
-    _LOGGER.debug("Setting up Frank")
+    _LOGGER.debug("Setting up Frank Energie component")
 
     websession = async_get_clientsession(hass)
 
