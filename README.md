@@ -13,21 +13,9 @@ Installatie via HACS is mogelijk door deze repository toe te voegen als [custom 
 
 ### Configuratie
 
-De plugin en sensoren worden per stuk geconfigureerd in `configuration.yaml`.
+<a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=frank_energie" class="my badge" target="_blank">
+    <img src="https://my.home-assistant.io/badges/config_flow_start.svg">
+</a>
 
-```
-sensor:
-  - platform: frank_energie
-    display_options:
-      - gas_market
-      - gas_tax
-      - gas_markup
-      - elec_market
-      - elec_tax
-      - elec_markup
-      - gas_min
-      - gas_max
-      - elec_min
-      - elec_max
-      - elec_avg
-```
+De Frank Energie integratie kan worden toegevoegd via de 'Integraties' pagina in de instellingen.
+Vervolgens kunnen sensoren per stuk worden uitgeschakeld of verborgen indien gewenst.
