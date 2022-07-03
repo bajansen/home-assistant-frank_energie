@@ -1,6 +1,7 @@
 {
   "domain": "frank_energie",
   "name": "Frank Energie",
+  "config_flow": true,
   "codeowners": ["@bajansen"],
   "documentation": "https://github.com/bajansen/home-assistant-frank_energie",
   "issue_tracker": "https://github.com/bajansen/home-assistant-frank_energie/issues",
