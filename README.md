@@ -19,3 +19,7 @@ Installatie via HACS is mogelijk door deze repository toe te voegen als [custom 
 
 De Frank Energie integratie kan worden toegevoegd via de 'Integraties' pagina in de instellingen.
 Vervolgens kunnen sensoren per stuk worden uitgeschakeld of verborgen indien gewenst.
+
+#### Let op!
+
+Indien je deze plugin al gebruikte en hebt ingesteld via `configuration.yaml` dien je deze instellingen te verwijderen en Frank Energie opnieuw in te stellen middels de config flow zoals hierboven beschreven.
