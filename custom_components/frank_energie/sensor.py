@@ -67,3 +67,8 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
             self._update_job,
             utcnow().replace(minute=0, second=0) + timedelta(hours=1),
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self.entity_description.attr_fn(self.coordinator.processed_data())
