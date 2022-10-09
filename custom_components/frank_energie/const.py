@@ -21,13 +21,13 @@ UNIQUE_ID = f"{DOMAIN}_component"
 COMPONENT_TITLE = "Frank Energie"
 
 CONF_COORDINATOR = "coordinator"
-
+ATTR_HOUR = "Hour"
 
 @dataclass
 class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
     value_fn: Callable[[dict], StateType] = None
-
+    attr_fn: Callable[[dict[str, Any]], dict[str, StateType]] = lambda _: {}
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     FrankEnergieEntityDescription(
@@ -113,24 +113,28 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Lowest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: min(data['today_gas']),
+        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(min(data['today_gas']))},
     ),
     FrankEnergieEntityDescription(
         key="gas_max",
         name="Highest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: max(data['today_gas']),
+        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(max(data['today_gas']))},
     ),
     FrankEnergieEntityDescription(
         key="elec_min",
         name="Lowest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: min(data['today_elec']),
+        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(min(data['today_elec']))},
     ),
     FrankEnergieEntityDescription(
         key="elec_max",
         name="Highest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: max(data['today_elec']),
+        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(max(data['today_elec']))},
     ),
     FrankEnergieEntityDescription(
         key="elec_avg",
