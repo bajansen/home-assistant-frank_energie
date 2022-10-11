@@ -22,6 +22,7 @@ COMPONENT_TITLE = "Frank Energie"
 
 CONF_COORDINATOR = "coordinator"
 ATTR_HOUR = "Hour"
+ATTR_TIME = "Time"
 
 @dataclass
 class FrankEnergieEntityDescription(SensorEntityDescription):
@@ -113,28 +114,28 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Lowest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: min(data['today_gas']),
-        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(min(data['today_gas'])),"Time":datetime.now().replace(hour=data['today_gas'].index(min(data['today_gas'])), minute=0, second=0, microsecond=0)},
+        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(min(data['today_gas'])),ATTR_TIME:datetime.now().replace(hour=data['today_gas'].index(min(data['today_gas'])), minute=0, second=0, microsecond=0)},
     ),
     FrankEnergieEntityDescription(
         key="gas_max",
         name="Highest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: max(data['today_gas']),
-        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(max(data['today_gas'])),"Time":datetime.now().replace(hour=data['today_gas'].index(max(data['today_gas'])), minute=0, second=0, microsecond=0)},
+        attr_fn=lambda data: {ATTR_HOUR: data['today_gas'].index(max(data['today_gas'])),ATTR_TIME:datetime.now().replace(hour=data['today_gas'].index(max(data['today_gas'])), minute=0, second=0, microsecond=0)},
     ),
     FrankEnergieEntityDescription(
         key="elec_min",
         name="Lowest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: min(data['today_elec']),
-        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(min(data['today_elec'])),"Time":datetime.now().replace(hour=data['today_elec'].index(min(data['today_elec'])), minute=0, second=0, microsecond=0)},
+        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(min(data['today_elec'])),ATTR_TIME:datetime.now().replace(hour=data['today_elec'].index(min(data['today_elec'])), minute=0, second=0, microsecond=0)},
     ),
     FrankEnergieEntityDescription(
         key="elec_max",
         name="Highest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: max(data['today_elec']),
-        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(max(data['today_elec'])),"Time":datetime.now().replace(hour=data['today_elec'].index(max(data['today_elec'])), minute=0, second=0, microsecond=0)},
+        attr_fn=lambda data: {ATTR_HOUR: data['today_elec'].index(max(data['today_elec'])),ATTR_TIME:datetime.now().replace(hour=data['today_elec'].index(max(data['today_elec'])), minute=0, second=0, microsecond=0)},
     ),
     FrankEnergieEntityDescription(
         key="elec_avg",
