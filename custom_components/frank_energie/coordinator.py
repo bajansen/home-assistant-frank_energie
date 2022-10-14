@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import aiohttp
 
@@ -86,10 +86,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             if dt.parse_datetime(hour['from']) <= dt.utcnow() < dt.parse_datetime(hour['till']):
                 return hour['marketPrice'], hour['marketPriceTax'], hour['sourcingMarkupPrice'], hour['energyTaxPrice']
 
-    def get_hourprices(self, hourprices) -> List:
-        today_prices = []
+    def get_hourprices(self, hourprices) -> Dict:
+        today_prices = dict()
         for hour in hourprices:
-            today_prices.append(
-                (hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice'])
-            )
+            today_prices[dt.parse_datetime(hour['from'])] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
         return today_prices
