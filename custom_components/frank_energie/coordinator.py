@@ -26,7 +26,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             hass,
             logger,
             name="Frank Energie coordinator",
-            update_interval=timedelta(minutes=15),
+            update_interval=timedelta(minutes=60),
         )
 
     async def _async_update_data(self) -> dict:
