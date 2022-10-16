@@ -6,5 +6,5 @@
   "documentation": "https://github.com/bajansen/home-assistant-frank_energie",
   "issue_tracker": "https://github.com/bajansen/home-assistant-frank_energie/issues",
   "iot_class": "cloud_polling",
-  "version": "0.0.1"
+  "version": "1.0.0"
 }
