@@ -89,5 +89,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
     def get_hourprices(self, hourprices) -> Dict:
         today_prices = dict()
         for hour in hourprices:
-            today_prices[dt.parse_datetime(hour['from'])] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
+            # Calling astimezone(None) automagically gets local timezone
+            fromtime = dt.parse_datetime(hour['from']).astimezone()
+            today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
         return today_prices
