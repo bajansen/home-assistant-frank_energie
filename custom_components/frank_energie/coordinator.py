@@ -36,6 +36,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
         today = datetime.utcnow().date()
+        yesterday = today - timedelta(days=1)
         tomorrow = today + timedelta(days=1)
         day_after_tomorrow = today + timedelta(days=2)
 
@@ -45,7 +46,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
 
         return {
-            'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
+            'marketPricesElectricity': data_yesterday['marketPricesElectricity'] + data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
             'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
         }
 
@@ -88,8 +89,19 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
     def get_hourprices(self, hourprices) -> Dict:
         today_prices = dict()
+        tomorrow_prices = dict()
+        i=0
         for hour in hourprices:
             # Calling astimezone(None) automagically gets local timezone
             fromtime = dt.parse_datetime(hour['from']).astimezone()
-            today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
+            if 23 < i < 48:
+               today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
+            if 47 < i < 72:
+               tomorrow_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
+            i=i+1
+        if 3 < datetime.now().hour < 24:
+            return today_prices
+        if -1 < datetime.now().hour < 3:
+            if tomorrow_prices:
+                return tomorrow_prices
         return today_prices
