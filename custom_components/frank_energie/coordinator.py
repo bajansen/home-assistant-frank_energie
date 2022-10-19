@@ -78,7 +78,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             'elec': self.get_current_hourprices(self.data['marketPricesElectricity']),
             'gas': self.get_current_hourprices(self.data['marketPricesGas']),
             'today_elec': self.get_hourprices(self.data['marketPricesElectricity']),
-            'today_gas': self.get_hourprices(self.data['marketPricesGas'])
+            'today_gas': self.get_hourprices(self.data['marketPricesGas']),
+            'elec_market_upcoming': self.get_upcoming_prices(self.data['marketPricesElectricity'])
         }
 
     def get_current_hourprices(self, hourprices) -> Tuple:
@@ -93,3 +94,12 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             fromtime = dt.parse_datetime(hour['from']).astimezone()
             today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
         return today_prices
+
+    def get_upcoming_prices(self, hourprices) -> Dict:
+        upcoming_prices = dict()
+        now = datetime.utcnow()
+        for hour in hourprices:
+            fromtime = dt.parse_datetime(hour['from']).astimezone()
+            if datetime.fromisoformat(hour['from'][:-5]) > now:
+               upcoming_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
+        return upcoming_prices
