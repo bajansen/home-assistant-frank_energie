@@ -142,4 +142,25 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: round(sum(data['today_elec'].values()) / len(data['today_elec'].values()), 5)
     ),
+    FrankEnergieEntityDescription(
+        key="elec_upcoming_avg_market",
+        name="Average electricity price upcoming (All-in)",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: round(sum(data['elec_market_upcoming'].values()) / len(data['elec_market_upcoming'].values()), 3),
+        attr_fn=lambda data: {"Number of hours": len(data['elec_market_upcoming'].values())},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_upcoming_min",
+        name="Lowest energy price upcoming hours",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: min(data['elec_market_upcoming'].values()),
+        attr_fn=lambda data: {ATTR_TIME: min(data['elec_market_upcoming'],key=data['elec_market_upcoming'].get)},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_upcoming_max",
+        name="Highest energy price upcoming hours",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: max(data['elec_market_upcoming'].values()),
+        attr_fn=lambda data: {ATTR_TIME: max(data['elec_market_upcoming'],key=data['elec_market_upcoming'].get)},
+    ),
 )
