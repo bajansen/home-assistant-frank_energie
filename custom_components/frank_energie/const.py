@@ -3,10 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from homeassistant.components.sensor import (
-    SensorEntityDescription,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntityDescription
+
 from homeassistant.const import (
     CURRENCY_EURO,
     ENERGY_KILO_WATT_HOUR,
@@ -35,28 +33,24 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_markup",
         name="Current electricity price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: sum(data['elec']),
     ),
     FrankEnergieEntityDescription(
         key="elec_market",
         name="Current electricity market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['elec'][0],
     ),
     FrankEnergieEntityDescription(
         key="elec_tax",
         name="Current electricity price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['elec'][0] + data['elec'][1],
     ),
     FrankEnergieEntityDescription(
         key="elec_tax_vat",
         name="Current electricity VAT price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['elec'][1],
         entity_registry_enabled_default=False,
     ),
@@ -64,7 +58,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_sourcing",
         name="Current electricity sourcing markup",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['elec'][2],
         entity_registry_enabled_default=False,
     ),
@@ -72,7 +65,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_tax_only",
         name="Current electricity tax only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['elec'][3],
         entity_registry_enabled_default=False,
     ),
@@ -80,28 +72,24 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="gas_markup",
         name="Current gas price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: sum(data['gas']),
     ),
     FrankEnergieEntityDescription(
         key="gas_market",
         name="Current gas market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['gas'][0],
     ),
     FrankEnergieEntityDescription(
         key="gas_tax",
         name="Current gas price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['gas'][0] + data['gas'][1],
     ),
     FrankEnergieEntityDescription(
         key="gas_tax_vat",
         name="Current gas VAT price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['gas'][1],
         entity_registry_enabled_default=False,
     ),
@@ -109,7 +97,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="gas_sourcing",
         name="Current gas sourcing price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['gas'][2],
         entity_registry_enabled_default=False,
     ),
@@ -117,7 +104,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="gas_tax_only",
         name="Current gas tax only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data['gas'][3],
         entity_registry_enabled_default=False,
     ),
@@ -125,7 +111,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="gas_min",
         name="Lowest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: min(data['today_gas'].values()),
         attr_fn=lambda data: {ATTR_TIME: min(data['today_gas'],key=data['today_gas'].get)},
     ),
@@ -133,7 +118,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="gas_max",
         name="Highest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: max(data['today_gas'].values()),
         attr_fn=lambda data: {ATTR_TIME: max(data['today_gas'],key=data['today_gas'].get)},
     ),
@@ -141,7 +125,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_min",
         name="Lowest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: min(data['today_elec'].values()),
         attr_fn=lambda data: {ATTR_TIME: min(data['today_elec'],key=data['today_elec'].get)},
     ),
@@ -149,7 +132,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_max",
         name="Highest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: max(data['today_elec'].values()),
         attr_fn=lambda data: {ATTR_TIME: max(data['today_elec'],key=data['today_elec'].get)},
     ),
@@ -157,7 +139,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_avg",
         name="Average electricity price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: round(sum(data['today_elec'].values()) / len(data['today_elec'].values()), 5)
     ),
 )

@@ -4,7 +4,11 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import event
@@ -37,6 +41,8 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription) -> None:
         """Initialize the sensor."""
