@@ -42,8 +42,15 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         data_today = await self._run_graphql_query(today, tomorrow)
-        #data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
+        data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
 
+        # Smelly code
+        if data_tomorrow:
+            return {
+                'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
+                'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
+            }
+        # implicit else
         return {
             'marketPricesElectricity': data_today['marketPricesElectricity'],
             'marketPricesGas': data_today['marketPricesGas'],
