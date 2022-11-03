@@ -99,7 +99,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         upcoming_prices = dict()
         now = datetime.utcnow()
         for hour in hourprices:
-            fromtime = dt.parse_datetime(hour['from']).astimezone()
             if datetime.fromisoformat(hour['from'][:-5]) > now:
+               fromtime = dt.parse_datetime(hour['from']).astimezone()
                upcoming_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
         return upcoming_prices
