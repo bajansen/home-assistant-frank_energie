@@ -3,9 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from homeassistant.components.sensor import (
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntityDescription
+
 from homeassistant.const import (
     CURRENCY_EURO,
     ENERGY_KILO_WATT_HOUR,
@@ -48,21 +47,21 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data['elec'][0] + data['elec'][1],
     ),
-        FrankEnergieEntityDescription(
+    FrankEnergieEntityDescription(
         key="elec_tax_vat",
         name="Current electricity VAT price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data['elec'][1],
         entity_registry_enabled_default=False,
     ),
-        FrankEnergieEntityDescription(
+    FrankEnergieEntityDescription(
         key="elec_sourcing",
         name="Current electricity sourcing markup",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data['elec'][2],
         entity_registry_enabled_default=False,
     ),
-        FrankEnergieEntityDescription(
+    FrankEnergieEntityDescription(
         key="elec_tax_only",
         name="Current electricity tax only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",

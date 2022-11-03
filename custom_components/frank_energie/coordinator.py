@@ -45,9 +45,16 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         data_today = await self._run_graphql_query(today, tomorrow)
         data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
 
+        # Smelly code
+        if not data_tomorrow is None:
+            return {
+                'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
+                'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
+            }
+        # implicit else
         return {
-            'marketPricesElectricity': data_yesterday['marketPricesElectricity'] + data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
-            'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
+            'marketPricesElectricity': data_today['marketPricesElectricity'],
+            'marketPricesGas': data_today['marketPricesGas'],
         }
 
     async def _run_graphql_query(self, start_date, end_date):
@@ -72,7 +79,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             return data['data']
 
         except (asyncio.TimeoutError, aiohttp.ClientError, KeyError) as error:
-            raise UpdateFailed(f"Fetching energy data failed: {error}") from error
+            raise UpdateFailed(f"Fetching energy data for period {start_date} - {end_date} failed: {error}") from error
 
     def processed_data(self):
         return {
@@ -94,9 +101,9 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         for hour in hourprices:
             # Calling astimezone(None) automagically gets local timezone
             fromtime = dt.parse_datetime(hour['from']).astimezone()
-            if 23 < i < 48:
+            if -1 < i < 24:
                today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
-            if 47 < i < 72:
+            if 23 < i < 48:
                tomorrow_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
             i=i+1
         if 3 < datetime.now().hour < 24:
