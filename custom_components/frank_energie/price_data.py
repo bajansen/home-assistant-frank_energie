@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from homeassistant.util import dt
 
@@ -25,19 +25,19 @@ class Price:
     @property
     def for_now(self):
         """ Whether this price entry is for the current hour. """
-        return self.date_from <= dt.utcnow() < self.date_till
+        return self.date_from <= dt.now() < self.date_till
 
     @property
     def for_future(self):
         """ Whether this price entry is for and hour after the current one. """
-        return self.date_from.hour > dt.utcnow().hour
+        return self.date_from.hour > dt.now().hour
 
     @property
     def for_today(self):
         """ Whether this price entry is for the current day. """
-        day_start = dt.utcnow().replace(hour=0, minute=0, second=0)
-        day_end = dt.utcnow().replace(hour=23, minute=59, second=59)
-        return self.date_from > day_start and self.date_till < day_end
+        day_start = dt.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = day_start + timedelta(days=1)
+        return self.date_from >= day_start and self.date_till <= day_end
 
     @property
     def market_price_with_tax(self):
