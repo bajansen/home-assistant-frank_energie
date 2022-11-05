@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -57,7 +58,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         try:
-            self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+            self._attr_native_value = self.entity_description.value_fn(self.coordinator.data)
         except (TypeError, IndexError):
             # No data available
             self._attr_native_value = None
@@ -77,4 +78,4 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self.coordinator.processed_data())
+        return self.entity_description.attr_fn(self.coordinator.data)
