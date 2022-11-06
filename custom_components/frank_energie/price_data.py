@@ -14,8 +14,8 @@ class Price:
     energy_tax_price: float
 
     def __init__(self, data: dict):
-        self.date_from = dt.parse_datetime(data['from'])
-        self.date_till = dt.parse_datetime(data['till'])
+        self.date_from = dt.as_local(dt.parse_datetime(data['from']))
+        self.date_till = dt.as_local(dt.parse_datetime(data['till']))
 
         self.market_price = data['marketPrice']
         self.market_price_tax = data['marketPriceTax']
@@ -41,20 +41,22 @@ class Price:
 
     @property
     def market_price_with_tax(self):
-        return self.market_price + self.market_price_tax
+        return round(self.market_price + self.market_price_tax, 4)
 
     @property
     def total(self):
-        return self.market_price + self.market_price_tax + self.sourcing_markup_price + self.energy_tax_price
+        return round(self.market_price + self.market_price_tax + self.sourcing_markup_price + self.energy_tax_price, 4)
 
-    @property
-    def hour(self):
-        return self.date_from.astimezone()
 
 class PriceData:
+    price_data: list[Price]
 
-    def __init__(self, price_data: list[Price]):
+    def __init__(self, price_data: list[dict]):
         self.price_data = [Price(price) for price in price_data]
+
+    @property
+    def all(self):
+        return self.price_data
 
     @property
     def today(self) -> list[Price]:

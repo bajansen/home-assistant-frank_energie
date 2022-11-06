@@ -30,8 +30,8 @@ DATA_GAS = 'gas'
 @dataclass
 class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
-    value_fn: Callable[[PriceData], StateType] = None
-    attr_fn: Callable[[PriceData], dict[str, StateType]] = lambda _: {}
+    value_fn: Callable[[dict[PriceData]], StateType] = None
+    attr_fn: Callable[[dict[PriceData]], dict[str, StateType]] = lambda _: {}
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     FrankEnergieEntityDescription(
