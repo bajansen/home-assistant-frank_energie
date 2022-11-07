@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -49,7 +50,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
 
-        self._update_job = HassJob(self.async_schedule_update_ha_state)
+        self._update_job = HassJob(self._handle_scheduled_update)
         self._unsub_update = None
 
         super().__init__(coordinator)
@@ -73,6 +74,15 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
             self._update_job,
             utcnow().replace(minute=0, second=0) + timedelta(hours=1),
         )
+
+    async def _handle_scheduled_update(self, _):
+        """ Handle a scheduled update. """
+        # Only handle the scheduled update for entities which have a reference to hass,
+        # which disabled sensors don't have.
+        if self.hass is None:
+            return
+
+        self.async_schedule_update_ha_state()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
