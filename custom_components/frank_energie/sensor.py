@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     # Add an entity for each sensor type
     async_add_entities([
-        FrankEnergieSensor(frank_coordinator, description)
+        FrankEnergieSensor(hass, frank_coordinator, description)
         for description in SENSOR_TYPES
     ], True)
 
@@ -45,8 +45,9 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription) -> None:
+    def __init__(self, hass: HomeAssistant, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription) -> None:
         """Initialize the sensor."""
+        self.hass = hass
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
 
@@ -58,7 +59,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         try:
-            self._attr_native_value = self.entity_description.value_fn(self.coordinator.processed_data())
+            self._attr_native_value = self.entity_description.value_fn(self.coordinator.data)
         except (TypeError, IndexError):
             # No data available
             self._attr_native_value = None
@@ -87,4 +88,4 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self.coordinator.processed_data())
+        return self.entity_description.attr_fn(self.coordinator.data)

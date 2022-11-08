@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
 import logging
-from typing import Dict, List, Tuple
+from datetime import datetime, timedelta
 
 import aiohttp
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt
-from .const import DATA_URL
+from .const import DATA_ELECTRICITY, DATA_GAS, DATA_URL
+from .price_data import PriceData
+
+LOGGER = logging.getLogger(__name__)
 
 
 class FrankEnergieCoordinator(DataUpdateCoordinator):
@@ -41,22 +42,27 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
-        data_today = await self._run_graphql_query(today, tomorrow)
-        data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
+        try:
+            data_today = await self._run_graphql_query(today, tomorrow)
+            data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
+        except UpdateFailed as err:
+            # Check if we still have data to work with, if so, return this data. Still log the error as warning
+            if self.data[DATA_ELECTRICITY].get_future_hours() and self.data[DATA_GAS].get_future_hours():
+                LOGGER.warning(str(err))
+                return self.data
+            # Re-raise the error if there's no data from future left
+            raise err
 
-        # Smelly code
-        if data_tomorrow:
-            return {
-                'marketPricesElectricity': data_today['marketPricesElectricity'] + data_tomorrow['marketPricesElectricity'],
-                'marketPricesGas': data_today['marketPricesGas'] + data_tomorrow['marketPricesGas'],
-            }
-        # implicit else
         return {
-            'marketPricesElectricity': data_today['marketPricesElectricity'],
-            'marketPricesGas': data_today['marketPricesGas'],
+            DATA_ELECTRICITY: PriceData(
+                data_today.get('marketPricesElectricity', []) + data_tomorrow.get('marketPricesElectricity', [])
+            ),
+            DATA_GAS: PriceData(
+                data_today.get('marketPricesGas', []) + data_tomorrow.get('marketPricesGas', [])
+            ),
         }
 
-    async def _run_graphql_query(self, start_date, end_date):
+    async def _run_graphql_query(self, start_date, end_date) -> dict:
         query_data = {
             "query": """
                 query MarketPrices($startDate: Date!, $endDate: Date!) {
@@ -75,28 +81,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             resp = await self.websession.post(DATA_URL, json=query_data)
 
             data = await resp.json()
-            return data['data']
+            return data['data'] if data['data'] else {}
 
         except (asyncio.TimeoutError, aiohttp.ClientError, KeyError) as error:
             raise UpdateFailed(f"Fetching energy data for period {start_date} - {end_date} failed: {error}") from error
-
-    def processed_data(self):
-        return {
-            'elec': self.get_current_hourprices(self.data['marketPricesElectricity']),
-            'gas': self.get_current_hourprices(self.data['marketPricesGas']),
-            'today_elec': self.get_hourprices(self.data['marketPricesElectricity']),
-            'today_gas': self.get_hourprices(self.data['marketPricesGas'])
-        }
-
-    def get_current_hourprices(self, hourprices) -> Tuple:
-        for hour in hourprices:
-            if dt.parse_datetime(hour['from']) <= dt.utcnow() < dt.parse_datetime(hour['till']):
-                return hour['marketPrice'], hour['marketPriceTax'], hour['sourcingMarkupPrice'], hour['energyTaxPrice']
-
-    def get_hourprices(self, hourprices) -> Dict:
-        today_prices = dict()
-        for hour in hourprices:
-            # Calling astimezone(None) automagically gets local timezone
-            fromtime = dt.parse_datetime(hour['from']).astimezone()
-            today_prices[fromtime] = hour['marketPrice'] + hour['marketPriceTax'] + hour['sourcingMarkupPrice'] + hour['energyTaxPrice']
-        return today_prices
