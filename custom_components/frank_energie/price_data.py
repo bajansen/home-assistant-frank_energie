@@ -25,7 +25,7 @@ class Price:
     @property
     def for_now(self):
         """ Whether this price entry is for the current hour. """
-        return self.date_from <= dt.now() < self.date_till
+        return self.date_from < dt.now() < self.date_till
 
     @property
     def for_future(self):
