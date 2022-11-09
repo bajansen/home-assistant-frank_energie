@@ -47,7 +47,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             data_tomorrow = await self._run_graphql_query(tomorrow, day_after_tomorrow)
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
-            if self.data[DATA_ELECTRICITY].get_future_hours() and self.data[DATA_GAS].get_future_hours():
+            if self.data[DATA_ELECTRICITY].get_future_prices() and self.data[DATA_GAS].get_future_prices():
                 LOGGER.warning(str(err))
                 return self.data
             # Re-raise the error if there's no data from future left
