@@ -33,6 +33,7 @@ class FrankEnergieEntityDescription(SensorEntityDescription):
     value_fn: Callable[[dict[PriceData]], StateType] = None
     attr_fn: Callable[[dict[PriceData]], dict[str, StateType]] = lambda _: {}
 
+
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     FrankEnergieEntityDescription(
         key="elec_markup",
