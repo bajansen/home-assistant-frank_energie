@@ -2,7 +2,7 @@ name: Flake8 and pytest
 
 on:
   push:
-    branches: [ "main", "add-tests" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
