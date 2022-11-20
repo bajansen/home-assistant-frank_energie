@@ -12,6 +12,7 @@ permissions:
 jobs:
   run:
     name: Run flake8/pytest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
