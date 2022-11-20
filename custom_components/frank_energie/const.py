@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Callable
 
-from .price_data import PriceData
 from homeassistant.components.sensor import SensorEntityDescription
-
 from homeassistant.const import (
     CURRENCY_EURO,
     ENERGY_KILO_WATT_HOUR,
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers.typing import StateType
+
+from .price_data import PriceData
 
 ATTRIBUTION = "Data provided by Frank Energie"
 DOMAIN = "frank_energie"
