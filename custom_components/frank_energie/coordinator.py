@@ -66,12 +66,12 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         query_data = {
             "query": """
                 query MarketPrices($startDate: Date!, $endDate: Date!) {
-                     marketPricesElectricity(startDate: $startDate, endDate: $endDate) { 
-                        from till marketPrice marketPriceTax sourcingMarkupPrice energyTaxPrice 
-                     } 
-                     marketPricesGas(startDate: $startDate, endDate: $endDate) { 
-                        from till marketPrice marketPriceTax sourcingMarkupPrice energyTaxPrice 
-                     } 
+                     marketPricesElectricity(startDate: $startDate, endDate: $endDate) {
+                        from till marketPrice marketPriceTax sourcingMarkupPrice energyTaxPrice
+                     }
+                     marketPricesGas(startDate: $startDate, endDate: $endDate) {
+                        from till marketPrice marketPriceTax sourcingMarkupPrice energyTaxPrice
+                     }
                 }
             """,
             "variables": {"startDate": str(start_date), "endDate": str(end_date)},
