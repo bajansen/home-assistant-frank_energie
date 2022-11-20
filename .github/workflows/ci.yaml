@@ -28,8 +28,9 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements_test.txt ]; then pip install -r requirements_test.txt; fi
-    - name: Setup flake8 annotations
-      uses: rbialon/flake8-annotations@v1
+    - name: Register flake8 problem matcher
+      run: |
+        echo "::add-matcher::.github/workflows/flake8-matchers.json"
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
