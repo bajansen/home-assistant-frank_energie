@@ -82,3 +82,11 @@ class PriceData:
     def get_future_prices(self):
         """ Prices for hours after the current one. """
         return [hour for hour in self.price_data if hour.for_future]
+
+    def asdict(self, attr):
+        """ Return a dict that can be used as entity attribute data. """
+        return [{
+            'from': e.date_from,
+            'till': e.date_till,
+            'price': getattr(e, attr)
+        } for e in self.price_data]

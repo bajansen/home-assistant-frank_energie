@@ -1,10 +1,8 @@
 from datetime import datetime, timedelta
-from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
-from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import generate_entity_id
@@ -13,6 +11,7 @@ from pytest_homeassistant_custom_component.common import async_fire_time_changed
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
 from custom_components.frank_energie import const
+from tests.utils import ResponseMocks
 
 
 @pytest.fixture
@@ -28,43 +27,28 @@ async def frank_energie_config_entry(hass: HomeAssistant, enable_custom_integrat
 
 
 @pytest.fixture
-def aioclient_mock(aioclient_mock: AiohttpClientMocker, socket_enabled):
-    return aioclient_mock
+def aioclient_responses(aioclient_mock: AiohttpClientMocker, socket_enabled):
+    responses = ResponseMocks()
 
+    async def next_response(*_):
+        return next(responses)
 
-def generate_prices_response(start: datetime, all_in_prices: list | None):
-    """ Generate a list of prices. """
-    start = start.replace(second=0, microsecond=0)
-    if all_in_prices is None:
-        return None
-    return [
-        {
-            'from': (start + timedelta(hours=i)).astimezone().isoformat(),
-            'till': (start + timedelta(hours=i + 1)).astimezone().isoformat(),
-            'marketPrice': 0.7 * price,
-            'marketPriceTax': 0.05 * price,
-            'sourcingMarkupPrice': 0.1 * price,
-            'energyTaxPrice': 0.15 * price,
-        } for i, price in enumerate(all_in_prices)
-    ]
-
-
-def add_mock_post(
-        aioclient_mock: AiohttpClientMocker,
-        start_date: datetime, electricity_prices: list | None, gas_prices: list | None,
-        http_status: int = HTTPStatus.OK,
-):
     aioclient_mock.post(
         const.DATA_URL,
-        json={
-            'data': {
-                'marketPricesElectricity': generate_prices_response(start_date, electricity_prices),
-                'marketPricesGas': generate_prices_response(start_date, gas_prices)
-            }
-        },
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-        status=http_status
+        side_effect=next_response
     )
+
+    return responses
+
+
+def price_generator(base: float, var: float) -> list:
+    """
+    Return a list of 24 prices which has two peaks of price `base` and 3 bottoms of `base - 6 * var`.
+    :param base:
+    :param var:
+    :return:
+    """
+    return [round(base - var * abs(6 - (i % 12)), 3) for i in range(24)]
 
 
 async def enable_all_sensors(hass):
@@ -90,25 +74,24 @@ async def trigger_update(hass, delta_seconds=config_entries.RELOAD_AFTER_UPDATE_
 @patch('frank_energie.price_data.dt.now')
 async def test_sensors(
         dt_mock,
-        aioclient_mock: AiohttpClientMocker,
+        aioclient_responses: ResponseMocks,
         frank_energie_config_entry: MockConfigEntry,
         hass: HomeAssistant,
 ):
     hass.config.set_time_zone("Europe/Amsterdam")
     dt_mock.return_value = datetime.utcnow().replace(hour=14, minute=15, second=0, microsecond=0).astimezone()
     start_of_day = datetime.utcnow().replace(hour=0, minute=0)
-    add_mock_post(
-        aioclient_mock,
+    aioclient_responses.add(
         start_of_day,
         [0.2] * 10 + [0.25, 0.3, 0.5, 0.4] + [0.15] * 10,
         [1.75] * 6 + [1.23] * 18,
     )
-    add_mock_post(
-        aioclient_mock,
+    aioclient_responses.add(
         start_of_day + timedelta(days=1),
         [0.3] * 12 + [0.15] * 12,
         [1.23] * 24,
     )
+    aioclient_responses.cyclic()
 
     await hass.config_entries.async_setup(frank_energie_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -147,25 +130,16 @@ async def test_sensors(
 @patch('frank_energie.price_data.dt.now')
 async def test_sensors_get_data_of_current_hour(
         dt_mock,
-        aioclient_mock: AiohttpClientMocker,
+        aioclient_responses: ResponseMocks,
         frank_energie_config_entry: MockConfigEntry,
         hass: HomeAssistant,
 ):
     hass.config.set_time_zone("Europe/Amsterdam")
     dt_mock.return_value = datetime.utcnow().replace(hour=5, minute=15, second=0, microsecond=0).astimezone()
     start_of_day = datetime.utcnow().replace(hour=0, minute=0)
-    add_mock_post(
-        aioclient_mock,
-        start_of_day,
-        [0.3] * 12 + [0.15] * 12,
-        [1.75] * 6 + [1.23] * 18,
-    )
-    add_mock_post(
-        aioclient_mock,
-        start_of_day + timedelta(days=1),
-        [0.25] * 12 + [0.1] * 12,
-        [1.23] * 6 + [1.11] * 18,
-    )
+    aioclient_responses.add(start_of_day, [0.3] * 12 + [0.15] * 12, [1.75] * 6 + [1.23] * 18)
+    aioclient_responses.add(start_of_day + timedelta(days=1), [0.25] * 12 + [0.1] * 12, [1.23] * 6 + [1.11] * 18)
+    aioclient_responses.cyclic()
 
     await hass.config_entries.async_setup(frank_energie_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -185,7 +159,7 @@ async def test_sensors_get_data_of_current_hour(
 @patch('frank_energie.price_data.dt.now')
 async def test_sensors_no_data_for_tomorrow(
         dt_mock,
-        aioclient_mock: AiohttpClientMocker,
+        aioclient_responses: ResponseMocks,
         frank_energie_config_entry: MockConfigEntry,
         hass: HomeAssistant,
 ):
@@ -194,8 +168,8 @@ async def test_sensors_no_data_for_tomorrow(
     start_of_day = datetime.utcnow().replace(hour=0, minute=0)
 
     # First response is for today's data, 2nd for tomorrow's data
-    add_mock_post(aioclient_mock, start_of_day, [0.3] * 24, [1.75] * 6 + [1.23] * 18)
-    add_mock_post(aioclient_mock, start_of_day + timedelta(days=1), None, None)
+    aioclient_responses.add(start_of_day, [0.3] * 24, [1.75] * 6 + [1.23] * 18)
+    aioclient_responses.add(start_of_day + timedelta(days=1), [], [])
 
     await hass.config_entries.async_setup(frank_energie_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -203,3 +177,44 @@ async def test_sensors_no_data_for_tomorrow(
     # Check the state at 5:15
     assert hass.states.get('sensor.current_electricity_price_all_in').state == '0.3'
     assert hass.states.get('sensor.current_gas_price_all_in').state == '1.23'
+
+
+@patch('frank_energie.price_data.dt.now')
+async def test_sensors_hour_price_attr(
+        dt_mock,
+        aioclient_responses: ResponseMocks,
+        frank_energie_config_entry: MockConfigEntry,
+        hass: HomeAssistant,
+):
+    hass.config.set_time_zone("Europe/Amsterdam")
+    dt_mock.return_value = datetime.utcnow().replace(hour=20, minute=0, second=0, microsecond=0).astimezone()
+    start_of_day = datetime.utcnow().replace(hour=0, minute=0)
+
+    # First response is for today's data, 2nd for tomorrow's data
+    aioclient_responses.add(
+        start_of_day,
+        price_generator(0.25, 0.05),
+        gas_prices=[1.75] * 6 + [1.23] * 18
+    )
+    aioclient_responses.add(
+        start_of_day + timedelta(days=1),
+        price_generator(0.3, 0.02),
+        gas_prices=[1.23] * 6 + [0.75] * 18
+    )
+
+    await hass.config_entries.async_setup(frank_energie_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check the all in electricity prices
+    price_attr = [a['price'] for a in hass.states.get('sensor.current_electricity_price_all_in').attributes['prices']]
+    assert price_attr == price_generator(0.25, 0.05) + price_generator(0.3, 0.02)
+
+    # Check the all in electricity prices
+    price_attr = [a['price'] for a in hass.states.get('sensor.current_gas_price_all_in').attributes['prices']]
+    assert price_attr == [1.75] * 6 + [1.23] * 24 + [0.75] * 18
+
+    # For the other sensors just check if the prices attribute is there
+    assert 48 == len(hass.states.get('sensor.current_electricity_market_price').attributes['prices'])
+    assert 48 == len(hass.states.get('sensor.current_electricity_price_including_tax').attributes['prices'])
+    assert 48 == len(hass.states.get('sensor.current_gas_market_price').attributes['prices'])
+    assert 48 == len(hass.states.get('sensor.current_gas_price_including_tax').attributes['prices'])

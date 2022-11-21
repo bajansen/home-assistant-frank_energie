@@ -23,3 +23,12 @@ Vervolgens kunnen sensoren per stuk worden uitgeschakeld of verborgen indien gew
 #### Let op!
 
 Indien je deze plugin al gebruikte en hebt ingesteld via `configuration.yaml` dien je deze instellingen te verwijderen en Frank Energie opnieuw in te stellen middels de config flow zoals hierboven beschreven.
+
+### Gebruik
+
+Een aantal sensors hebben een `prices` attribuut die alle bekende prijzen bevat. Dit kan worden gebruikt om zelf met een template nieuwe sensors te maken.
+
+Voorbeeld om de hoogst bekende prijs na het huidige uur te bepalen:
+```
+{{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | max(attribute='price') }}
+```

@@ -31,7 +31,7 @@ DATA_GAS = 'gas'
 class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
     value_fn: Callable[[dict[PriceData]], StateType] = None
-    attr_fn: Callable[[dict[PriceData]], dict[str, StateType]] = lambda _: {}
+    attr_fn: Callable[[dict[PriceData]], dict[str, StateType | list]] = lambda _: {}
 
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
@@ -40,18 +40,21 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.total,
+        attr_fn=lambda data: {'prices': data[DATA_ELECTRICITY].asdict('total')},
     ),
     FrankEnergieEntityDescription(
         key="elec_market",
         name="Current electricity market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price,
+        attr_fn=lambda data: {'prices': data[DATA_ELECTRICITY].asdict('market_price')},
     ),
     FrankEnergieEntityDescription(
         key="elec_tax",
         name="Current electricity price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price_with_tax,
+        attr_fn=lambda data: {'prices': data[DATA_ELECTRICITY].asdict('market_price_with_tax')},
     ),
     FrankEnergieEntityDescription(
         key="elec_tax_vat",
@@ -79,18 +82,21 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: data[DATA_GAS].current_hour.total,
+        attr_fn=lambda data: {'prices': data[DATA_GAS].asdict('total')},
     ),
     FrankEnergieEntityDescription(
         key="gas_market",
         name="Current gas market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: data[DATA_GAS].current_hour.market_price,
+        attr_fn=lambda data: {'prices': data[DATA_GAS].asdict('market_price')},
     ),
     FrankEnergieEntityDescription(
         key="gas_tax",
         name="Current gas price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: data[DATA_GAS].current_hour.market_price_with_tax,
+        attr_fn=lambda data: {'prices': data[DATA_GAS].asdict('market_price_with_tax')},
     ),
     FrankEnergieEntityDescription(
         key="gas_tax_vat",
