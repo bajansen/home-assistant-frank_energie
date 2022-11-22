@@ -32,13 +32,3 @@ Voorbeeld om de hoogst bekende prijs na het huidige uur te bepalen:
 ```
 {{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | max(attribute='price') }}
 ```
-
-Laagste prijs vandaag:
-```
-{{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('till', 'le', now().replace(hour=23)) | min(attribute='price') }}
-```
-
-Laagste prijs in de komende zes uren:
-```
-{{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | selectattr('till', 'lt', now() + timedelta(hours=6)) | min(attribute='price') }}
-```
