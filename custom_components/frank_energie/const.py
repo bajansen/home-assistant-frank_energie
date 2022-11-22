@@ -125,6 +125,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: data[DATA_GAS].today_min.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_min.date_from},
+        entity_registry_enabled_default=False,
     ),
     FrankEnergieEntityDescription(
         key="gas_max",
@@ -132,6 +133,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         value_fn=lambda data: data[DATA_GAS].today_max.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_max.date_from},
+        entity_registry_enabled_default=False,
     ),
     FrankEnergieEntityDescription(
         key="elec_min",
@@ -139,6 +141,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].today_min.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_min.date_from},
+        entity_registry_enabled_default=False,
     ),
     FrankEnergieEntityDescription(
         key="elec_max",
@@ -146,11 +149,13 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].today_max.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_max.date_from},
+        entity_registry_enabled_default=False,
     ),
     FrankEnergieEntityDescription(
         key="elec_avg",
         name="Average electricity price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         value_fn=lambda data: data[DATA_ELECTRICITY].today_avg,
+        entity_registry_enabled_default=False,
     ),
 )
