@@ -151,6 +151,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         key="elec_avg",
         name="Average electricity price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        value_fn=lambda data: data[DATA_ELECTRICITY].today_avg
+        value_fn=lambda data: data[DATA_ELECTRICITY].today_avg,
     ),
 )
