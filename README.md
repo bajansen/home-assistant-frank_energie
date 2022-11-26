@@ -42,3 +42,32 @@ Laagste prijs in de komende zes uren:
 ```
 {{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | selectattr('till', 'lt', now() + timedelta(hours=6)) | min(attribute='price') }}
 ```
+
+### Grafiek
+Middel apex-card is het mogelijk om de toekomstige prijzen te plotten:
+
+'''
+type: custom:apexcharts-card
+graph_span: 48h
+span:
+  start: day
+now:
+  show: true
+  label: Now
+header:
+  show: true
+  title: Day ahead prices (€/kwh)
+series:
+  - entity: sensor.current_electricity_price_all_in
+    show:
+      legend_value: false
+    stroke_width: 2
+    float_precision: 3
+    type: column
+    opacity: 0.3
+    color: '#1007f0'
+    data_generator: |
+      return entity.attributes.prices.map((record, index) => {
+        return [record.from, record.price];
+      });
+'''
