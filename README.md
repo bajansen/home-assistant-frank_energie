@@ -44,9 +44,9 @@ Laagste prijs in de komende zes uren:
 ```
 
 ### Grafiek
-Middel apex-card is het mogelijk om de toekomstige prijzen te plotten:
+Middel [apex-card](https://github.com/RomRider/apexcharts-card) is het mogelijk om de toekomstige prijzen te plotten:
 
-'''
+```
 type: custom:apexcharts-card
 graph_span: 48h
 span:
@@ -70,4 +70,4 @@ series:
       return entity.attributes.prices.map((record, index) => {
         return [record.from, record.price];
       });
-'''
+```
