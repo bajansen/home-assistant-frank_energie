@@ -43,8 +43,8 @@ Laagste prijs in de komende zes uren:
 {{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | selectattr('till', 'lt', now() + timedelta(hours=6)) | min(attribute='price') }}
 ```
 
-### Grafiek
-Middel [apex-card](https://github.com/RomRider/apexcharts-card) is het mogelijk om de toekomstige prijzen te plotten:
+#### Grafiek
+Middels [apex-card](https://github.com/RomRider/apexcharts-card) is het mogelijk de toekomstige prijzen te plotten:
 
 ```
 type: custom:apexcharts-card
@@ -53,10 +53,10 @@ span:
   start: day
 now:
   show: true
-  label: Now
+  label: Nu
 header:
   show: true
-  title: Day ahead prices (€/kwh)
+  title: Energieprijs per uur (€/kwh)
 series:
   - entity: sensor.current_electricity_price_all_in
     show:
@@ -65,7 +65,7 @@ series:
     float_precision: 3
     type: column
     opacity: 0.3
-    color: '#1007f0'
+    color: '#03b2cb'
     data_generator: |
       return entity.attributes.prices.map((record, index) => {
         return [record.from, record.price];
