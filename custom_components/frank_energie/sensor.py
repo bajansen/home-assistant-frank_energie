@@ -51,10 +51,6 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
-
-        self._update_job = HassJob(self._handle_scheduled_update)
-        self._unsub_update = None
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Frank Energy",
@@ -62,6 +58,9 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.frankenergie.nl/goedkoop",
         )
+
+        self._update_job = HassJob(self._handle_scheduled_update)
+        self._unsub_update = None
 
         super().__init__(coordinator)
 
