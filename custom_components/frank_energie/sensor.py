@@ -1,26 +1,177 @@
 """Frank Energie current electricity and gas price information service."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import Any
+from dataclasses import dataclass
+from datetime import timedelta
+from typing import Any, Callable
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
-    SensorStateClass
+    SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CURRENCY_EURO,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
-from .const import ATTRIBUTION, CONF_COORDINATOR, DOMAIN, FrankEnergieEntityDescription, ICON, SENSOR_TYPES
+
+from .const import (
+    ATTR_TIME,
+    ATTRIBUTION,
+    CONF_COORDINATOR,
+    DATA_ELECTRICITY,
+    DATA_GAS,
+    DOMAIN,
+    ICON,
+)
 from .coordinator import FrankEnergieCoordinator
+from .price_data import PriceData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class FrankEnergieEntityDescription(SensorEntityDescription):
+    """Describes Frank Energie sensor entity."""
+
+    value_fn: Callable[[dict[PriceData]], StateType] = None
+    attr_fn: Callable[[dict[PriceData]], dict[str, StateType | list]] = lambda _: {}
+
+
+SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
+    FrankEnergieEntityDescription(
+        key="elec_markup",
+        name="Current electricity price (All-in)",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.total,
+        attr_fn=lambda data: {"prices": data[DATA_ELECTRICITY].asdict("total")},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_market",
+        name="Current electricity market price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price,
+        attr_fn=lambda data: {"prices": data[DATA_ELECTRICITY].asdict("market_price")},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tax",
+        name="Current electricity price including tax",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price_with_tax,
+        attr_fn=lambda data: {
+            "prices": data[DATA_ELECTRICITY].asdict("market_price_with_tax")
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tax_vat",
+        name="Current electricity VAT price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price_tax,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_sourcing",
+        name="Current electricity sourcing markup",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.sourcing_markup_price,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tax_only",
+        name="Current electricity tax only",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.energy_tax_price,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_markup",
+        name="Current gas price (All-in)",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.total,
+        attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("total")},
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_market",
+        name="Current gas market price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.market_price,
+        attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("market_price")},
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_tax",
+        name="Current gas price including tax",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.market_price_with_tax,
+        attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("market_price_with_tax")},
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_tax_vat",
+        name="Current gas VAT price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.market_price_tax,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_sourcing",
+        name="Current gas sourcing price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.sourcing_markup_price,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_tax_only",
+        name="Current gas tax only",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].current_hour.energy_tax_price,
+        entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_min",
+        name="Lowest gas price today",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].today_min.total,
+        attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_min.date_from},
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_max",
+        name="Highest gas price today",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        value_fn=lambda data: data[DATA_GAS].today_max.total,
+        attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_max.date_from},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_min",
+        name="Lowest energy price today",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].today_min.total,
+        attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_min.date_from},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_max",
+        name="Highest energy price today",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].today_max.total,
+        attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_max.date_from},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_avg",
+        name="Average electricity price today",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        value_fn=lambda data: data[DATA_ELECTRICITY].today_avg,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -32,10 +183,13 @@ async def async_setup_entry(
     frank_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
     # Add an entity for each sensor type
-    async_add_entities([
-        FrankEnergieSensor(frank_coordinator, description, config_entry)
-        for description in SENSOR_TYPES
-    ], True)
+    async_add_entities(
+        [
+            FrankEnergieSensor(frank_coordinator, description, config_entry)
+            for description in SENSOR_TYPES
+        ],
+        True,
+    )
 
 
 class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
@@ -70,7 +224,9 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         try:
-            self._attr_native_value = self.entity_description.value_fn(self.coordinator.data)
+            self._attr_native_value = self.entity_description.value_fn(
+                self.coordinator.data
+            )
         except (TypeError, IndexError, ValueError):
             # No data available
             self._attr_native_value = None
@@ -88,7 +244,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         )
 
     async def _handle_scheduled_update(self, _):
-        """ Handle a scheduled update. """
+        """Handle a scheduled update."""
         # Only handle the scheduled update for entities which have a reference to hass,
         # which disabled sensors don't have.
         if self.hass is None:
