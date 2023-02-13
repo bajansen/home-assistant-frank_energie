@@ -53,8 +53,8 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"frank_energie.{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name="Frank Energy",
-            default_manufacturer="Frank Energy",
+            name="Frank Energie",
+            default_manufacturer="Frank Energie",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.frankenergie.nl/goedkoop",
         )
