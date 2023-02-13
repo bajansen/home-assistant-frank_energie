@@ -7,7 +7,6 @@ from typing import Any
 
 from homeassistant.components.sensor import (
     SensorEntity,
-    SensorDeviceClass,
     SensorStateClass
 )
 from homeassistant.config_entries import ConfigEntry
@@ -44,7 +43,6 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
-    _attr_device_class = SensorDeviceClass.MONETARY
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription, entry: ConfigEntry) -> None:
