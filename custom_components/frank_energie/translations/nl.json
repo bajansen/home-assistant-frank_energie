@@ -2,8 +2,11 @@
     "config": {
         "step": {
             "user": {
-                "description": "Geen authenticatie of configuratie nodig."
+                "description": "Wil je beginnen met instellen?"
             }
+        },
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         }
     }
 }

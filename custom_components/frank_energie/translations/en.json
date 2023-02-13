@@ -2,8 +2,11 @@
     "config": {
         "step": {
             "user": {
-                "description": "No authentication or configuration needed."
+                "description": "Do you want to start setup?"
             }
+        },
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         }
     }
 }
