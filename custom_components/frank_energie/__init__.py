@@ -22,13 +22,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     web_session_client = async_get_clientsession(hass)
     frank_coordinator = FrankEnergieCoordinator(hass, web_session_client)
 
+    # Fetch initial data, so we have data when entities subscribe and set up the platform
+    await frank_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_COORDINATOR: frank_coordinator,
     }
 
-    # Fetch initial data, so we have data when entities subscribe and set up the platform
-    await frank_coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
