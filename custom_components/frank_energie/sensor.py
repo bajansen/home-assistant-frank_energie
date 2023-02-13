@@ -46,9 +46,9 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
-        self, 
-        coordinator: FrankEnergieCoordinator, 
-        description: FrankEnergieEntityDescription, 
+        self,
+        coordinator: FrankEnergieCoordinator,
+        description: FrankEnergieEntityDescription,
         entry: ConfigEntry
     ) -> None:
         """Initialize the sensor."""
