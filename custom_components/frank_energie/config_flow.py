@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant import config_entries
-from .const import COMPONENT_TITLE, DOMAIN, UNIQUE_ID
+from .const import COMPONENT_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,13 +16,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle adding the config, no user input is needed."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=None
-            )
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-        # Abort if we're adding a new config and the unique id is already in use, else create the entry
-        # For now it's only possible to add the Frank Energie integration once
-        await self.async_set_unique_id(UNIQUE_ID)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=COMPONENT_TITLE, data={})
+        if user_input is not None:
+            return self.async_create_entry(title=COMPONENT_TITLE, data={})
+
+        return self.async_show_form(step_id="user")
