@@ -45,7 +45,12 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     _attr_icon = ICON
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription, entry: ConfigEntry) -> None:
+    def __init__(
+		self, 
+		coordinator: FrankEnergieCoordinator, 
+		description: FrankEnergieEntityDescription, 
+		entry: ConfigEntry
+	) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
