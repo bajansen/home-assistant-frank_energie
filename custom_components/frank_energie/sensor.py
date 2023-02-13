@@ -13,6 +13,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import event
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
@@ -32,7 +34,7 @@ async def async_setup_entry(
 
     # Add an entity for each sensor type
     async_add_entities([
-        FrankEnergieSensor(frank_coordinator, description)
+        FrankEnergieSensor(frank_coordinator, description, config_entry)
         for description in SENSOR_TYPES
     ], True)
 
@@ -45,13 +47,21 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription) -> None:
+    def __init__(self, coordinator: FrankEnergieCoordinator, description: FrankEnergieEntityDescription, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"frank_energie.{description.key}"
 
         self._update_job = HassJob(self._handle_scheduled_update)
         self._unsub_update = None
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.entry_id}")},
+            name="Frank Energy",
+            default_manufacturer="Frank Energy",
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.frankenergie.nl/goedkoop",
+        )
 
         super().__init__(coordinator)
 
