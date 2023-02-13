@@ -7,7 +7,6 @@ from datetime import timedelta
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
