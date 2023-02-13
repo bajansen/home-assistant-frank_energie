@@ -10,7 +10,7 @@ from homeassistant.util import dt
 from pytest_homeassistant_custom_component.common import async_fire_time_changed, MockConfigEntry
 from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClientMocker
 
-from custom_components.frank_energie import const
+from custom_components.frank_energie import const, sensor
 from tests.utils import ResponseMocks
 
 
@@ -54,7 +54,7 @@ def price_generator(base: float, var: float) -> list:
 async def enable_all_sensors(hass):
     """Enable all sensors of the integration."""
     er = entity_registry.async_get(hass)
-    for sensor_type in const.SENSOR_TYPES:
+    for sensor_type in sensor.SENSOR_TYPES:
         if sensor_type.entity_registry_enabled_default is False:
             entity_id = generate_entity_id("sensor.{}", sensor_type.name, hass=hass)
             er.async_update_entity(entity_id, disabled_by=None)
