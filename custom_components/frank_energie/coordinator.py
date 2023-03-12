@@ -1,19 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 from datetime import datetime, timedelta
 
-import aiohttp
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DATA_ELECTRICITY, DATA_GAS, DATA_URL
-
-# from .price_data import PriceData
+from .const import DATA_ELECTRICITY, DATA_GAS
 
 from frank_energie import FrankEnergie
-from frank_energie.models import PriceData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +43,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            (data_today_electricity, data_today_gas)  = await self.api.prices(today, tomorrow)
+            (data_today_electricity, data_today_gas) = await self.api.prices(today, tomorrow)
             (data_tomorrow_electricity, data_tomorrow_gas) = await self.api.prices(tomorrow, day_after_tomorrow)
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
