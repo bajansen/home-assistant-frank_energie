@@ -43,10 +43,14 @@ Laagste prijs in de komende zes uren:
 {{ state_attr('sensor.current_electricity_price_all_in', 'prices') | selectattr('from', 'gt', now()) | selectattr('till', 'lt', now() + timedelta(hours=6)) | min(attribute='price') }}
 ```
 
-#### Grafiek
+### Grafiek (voorbeelden)
 Middels [apex-card](https://github.com/RomRider/apexcharts-card) is het mogelijk de toekomstige prijzen te plotten:
 
-```
+#### Voorbeeld 1 - Alle data
+
+![Apex graph voorbeeld 1](/images/example_1.png "Voorbeeld 1")
+
+```yaml 
 type: custom:apexcharts-card
 graph_span: 48h
 span:
@@ -63,6 +67,43 @@ series:
       legend_value: false
     stroke_width: 2
     float_precision: 3
+    type: column
+    opacity: 0.3
+    color: '#03b2cb'
+    data_generator: |
+      return entity.attributes.prices.map((record, index) => {
+        return [record.from, record.price];
+      });
+```
+
+#### Voorbeeld 2 - Komende 10 uur
+
+![Apex graph voorbeeld 2](/images/example_2.png "Voorbeeld 2")
+
+```yaml
+type: custom:apexcharts-card
+graph_span: 14h
+span:
+  start: hour
+  offset: '-3h'
+now:
+  show: true
+  label: Nu
+header:
+  show: true
+  show_states: true
+  colorize_states: true
+yaxis:
+  - decimals: 2
+    min: 0
+    max: '|+0.10|'
+series:
+  - entity: sensor.current_electricity_price_all_in
+    show:
+      in_header: raw
+      legend_value: false
+    stroke_width: 2
+    float_precision: 4
     type: column
     opacity: 0.3
     color: '#03b2cb'
