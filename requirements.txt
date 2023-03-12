@@ -1,3 +1,4 @@
 pytest-homeassistant-custom-component~=0.13.7
 flake8~=5.0.4
 pytest~=7.2.1
+python-frank-energie~=2.0.0
