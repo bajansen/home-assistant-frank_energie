@@ -36,7 +36,7 @@ from .const import (
     ICON,
 )
 from .coordinator import FrankEnergieCoordinator
-from frank_energie.models import PriceData
+from python_frank_energie.models import PriceData
 
 _LOGGER = logging.getLogger(__name__)
 

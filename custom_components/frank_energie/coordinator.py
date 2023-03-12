@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import DATA_ELECTRICITY, DATA_GAS
 
-from frank_energie import FrankEnergie
+from python_frank_energie import FrankEnergie
 
 LOGGER = logging.getLogger(__name__)
 
