@@ -4,14 +4,15 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_COORDINATOR, DOMAIN
 from .coordinator import FrankEnergieCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+from python_frank_energie import FrankEnergie
+
 PLATFORMS = [Platform.SENSOR]
 
 
@@ -19,8 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Frank Energie component from a config entry."""
 
     # Initialise the coordinator and save it as domain-data
-    web_session_client = async_get_clientsession(hass)
-    frank_coordinator = FrankEnergieCoordinator(hass, web_session_client)
+
+    api = FrankEnergie(clientsession=async_get_clientsession(hass), auth_token=entry.data[CONF_ACCESS_TOKEN])
+    frank_coordinator = FrankEnergieCoordinator(hass, api)
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()

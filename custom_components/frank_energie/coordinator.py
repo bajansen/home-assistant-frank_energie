@@ -3,7 +3,9 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .const import DATA_ELECTRICITY, DATA_GAS
 
@@ -17,10 +19,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
     api: FrankEnergie
 
-    def __init__(self, hass: HomeAssistant, websession) -> None:
+    def __init__(self, hass: HomeAssistant, api: FrankEnergie) -> None:
         """Initialize the data object."""
         self.hass = hass
-        self.api = FrankEnergie(clientsession=websession)
+        self.api = api
 
         logger = logging.getLogger(__name__)
         super().__init__(

@@ -5,6 +5,11 @@ import logging
 
 from homeassistant import config_entries
 from .const import COMPONENT_TITLE, DOMAIN
+import voluptuous as vol
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME, CONF_AUTHENTICATION, CONF_TOKEN
+
+from python_frank_energie import FrankEnergie
+from python_frank_energie.exceptions import AuthException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,12 +19,83 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _show_setup_form(self, errors=None):
+        """Show the setup form to the user."""
+
+        data_schema = vol.Schema(
+            {
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+        )
+
+    async def async_step_login(self, user_input=None, errors=None):
+        """Handle login with credentials by user."""
+        if not user_input:
+            data_schema = vol.Schema(
+                {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                }
+            )
+
+            return self.async_show_form(
+                step_id="login",
+                data_schema=data_schema,
+                errors=errors,
+            )
+
+        api = FrankEnergie()
+
+        try:
+            auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        except AuthException:
+            return self.async_step_login({"base": "invalid_auth"})
+
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
+        self._abort_if_unique_id_configured()
+
+        data = {
+            CONF_USERNAME: "Frank Energie",
+            CONF_ACCESS_TOKEN: auth.authToken,
+            CONF_TOKEN: auth.refreshToken
+        }
+
+        return await self._async_create_entry(data)
+
+
     async def async_step_user(self, user_input=None):
-        """Handle adding the config, no user input is needed."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        """Handle a flow initiated by the user."""
+        if not user_input:
+            data_schema = vol.Schema(
+                {
+                vol.Required(CONF_AUTHENTICATION): bool,
+                }
+            )
 
-        if user_input is not None:
-            return self.async_create_entry(title=COMPONENT_TITLE, data={})
+            return self.async_show_form(
+                step_id="user",
+                data_schema=data_schema
+            )
 
-        return self.async_show_form(step_id="user")
+        if user_input[CONF_AUTHENTICATION]:
+            return await self.async_step_login()
+
+        data = {
+            CONF_USERNAME: "Frank Energie",
+        }
+
+        return await self._async_create_entry(data)
+
+    async def _async_create_entry(self, data):
+
+        await self.async_set_unique_id(data[CONF_USERNAME])
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=data[CONF_USERNAME], data=data)

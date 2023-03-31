@@ -1,12 +1,27 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "description": "Do you want to start setup?"
-            }
-        },
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username / e-mail"
+                },
+                "title": "Enter your Frank Energie information"
+            },
+            "user": {
+                "data": {
+                    "authentication": "Sign in"
+                },
+                "title": "Do you want to sign in?",
+                "description": "Frank Energie can be used without account, if you only want energy price data you can skip signing in."
+            }
         }
-    }
+    },
+    "title": "Frank Energie"
 }

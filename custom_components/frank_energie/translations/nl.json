@@ -1,12 +1,27 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "description": "Wil je beginnen met instellen?"
-            }
-        },
         "abort": {
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+            "already_configured": "Account is al toegevoegd"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam / e-mail"
+                },
+                "title": "Vul de login gegevens in"
+            },
+            "user": {
+                "data": {
+                    "authentication": "Log in"
+                },
+                "title": "Wil je inloggen voor Frank Energie?",
+                "description": "Frank Energie kan gebruikt worden zonder account, als je alleen energie prijs data wilt kun je inloggen overslaan."
+            }
         }
-    }
+    },
+    "title": "Frank Energie"
 }
