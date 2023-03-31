@@ -24,6 +24,10 @@ Vervolgens kunnen sensoren per stuk worden uitgeschakeld of verborgen indien gew
 
 Indien je deze plugin al gebruikte en hebt ingesteld via `configuration.yaml` dien je deze instellingen te verwijderen en Frank Energie opnieuw in te stellen middels de config flow zoals hierboven beschreven.
 
+#### Inloggen
+
+Tijdens het instellen van de integratie wordt je gevraagd of je wilt inloggen. Op dit moment worden de mogelijkheden hiervan ontwikkeld.
+
 ### Gebruik
 
 Een aantal sensors hebben een `prices` attribuut die alle bekende prijzen bevat. Dit kan worden gebruikt om zelf met een template nieuwe sensors te maken.
