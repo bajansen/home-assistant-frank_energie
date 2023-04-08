@@ -1,16 +1,15 @@
+"""Coordinator implementation for Frank Energie integration."""
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
                                                       UpdateFailed)
 from python_frank_energie import FrankEnergie
 
-from .const import DATA_ELECTRICITY, DATA_GAS
+from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
-        """Get the latest data from Frank Energie"""
+        """Get the latest data from Frank Energie."""
         self.logger.debug("Fetching Frank Energie data")
 
         # We request data for today up until the day after tomorrow.
@@ -63,7 +62,12 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             # Re-raise the error if there's no data from future left
             raise err
 
+        data_month_summary = (
+            await self.api.monthSummary() if self.api.is_authenticated else None
+        )
+
         return {
             DATA_ELECTRICITY: data_today_electricity + data_tomorrow_electricity,
             DATA_GAS: data_today_gas + data_tomorrow_gas,
+            DATA_MONTH_SUMMARY: data_month_summary,
         }

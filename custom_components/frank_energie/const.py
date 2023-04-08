@@ -1,3 +1,4 @@
+"""Constants for the Frank Energie integration."""
 from __future__ import annotations
 
 ATTRIBUTION = "Data provided by Frank Energie"
@@ -12,3 +13,4 @@ ATTR_TIME = "from_time"
 
 DATA_ELECTRICITY = "electricity"
 DATA_GAS = "gas"
+DATA_MONTH_SUMMARY = "month_summary"

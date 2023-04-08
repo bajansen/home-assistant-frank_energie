@@ -1,8 +1,6 @@
 """Config flow for Picnic integration."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_AUTHENTICATION,
@@ -10,9 +8,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_AUTHENTICATION,
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import AuthException
 
-from .const import COMPONENT_TITLE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,9 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         api = FrankEnergie()
         try:
-            auth = await api.login(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
         except AuthException:
             return self.async_step_login({"base": "invalid_auth"})
         finally:
