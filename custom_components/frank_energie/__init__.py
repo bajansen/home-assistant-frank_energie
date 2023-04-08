@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Initialise the coordinator and save it as domain-data
 
-    api = FrankEnergie(clientsession=async_get_clientsession(hass), auth_token=entry.data[CONF_ACCESS_TOKEN])
+    api = FrankEnergie(clientsession=async_get_clientsession(hass), auth_token=entry.data.get(CONF_ACCESS_TOKEN, None))
     frank_coordinator = FrankEnergieCoordinator(hass, api)
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform

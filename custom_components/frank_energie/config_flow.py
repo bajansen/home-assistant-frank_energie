@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         data = {
-            CONF_USERNAME: "Frank Energie",
+            CONF_USERNAME: user_input[CONF_USERNAME],
             CONF_ACCESS_TOKEN: auth.authToken,
             CONF_TOKEN: auth.refreshToken
         }
@@ -87,15 +87,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input[CONF_AUTHENTICATION]:
             return await self.async_step_login()
 
-        data = {
-            CONF_USERNAME: "Frank Energie",
-        }
+        data = {}
 
         return await self._async_create_entry(data)
 
     async def _async_create_entry(self, data):
 
-        await self.async_set_unique_id(data[CONF_USERNAME])
+        await self.async_set_unique_id(data.get(CONF_USERNAME, "frank_energie"))
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=data[CONF_USERNAME], data=data)
+        return self.async_create_entry(title=data.get(CONF_USERNAME, "Frank Energie"), data=data)

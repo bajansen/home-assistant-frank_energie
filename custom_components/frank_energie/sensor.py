@@ -223,7 +223,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
-        self._attr_unique_id = f"frank_energie.{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}.{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Frank Energie",
