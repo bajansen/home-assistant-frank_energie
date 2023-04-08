@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_AUTHENTICATION,
-                                 CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_AUTHENTICATION,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import AuthException
 
@@ -15,22 +20,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Frank Energie."""
 
     VERSION = 1
-
-    def _show_setup_form(self, errors=None):
-        """Show the setup form to the user."""
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=data_schema,
-            errors=errors,
-        )
 
     async def async_step_login(self, user_input=None, errors=None):
         """Handle login with credentials by user."""
