@@ -6,17 +6,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import (SensorEntity,
+                                             SensorEntityDescription,
+                                             SensorStateClass)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CURRENCY_EURO,
-    ENERGY_KILO_WATT_HOUR,
-    VOLUME_CUBIC_METERS,
-)
+from homeassistant.const import (CURRENCY_EURO, ENERGY_KILO_WATT_HOUR,
+                                 VOLUME_CUBIC_METERS)
 from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -25,18 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
-
-from .const import (
-    ATTR_TIME,
-    ATTRIBUTION,
-    CONF_COORDINATOR,
-    DATA_ELECTRICITY,
-    DATA_GAS,
-    DOMAIN,
-    ICON,
-)
-from .coordinator import FrankEnergieCoordinator
 from python_frank_energie.models import PriceData
+
+from .const import (ATTR_TIME, ATTRIBUTION, CONF_COORDINATOR, DATA_ELECTRICITY,
+                    DATA_GAS, DOMAIN, ICON)
+from .coordinator import FrankEnergieCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -219,7 +207,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: FrankEnergieCoordinator,
         description: FrankEnergieEntityDescription,
-        entry: ConfigEntry
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description

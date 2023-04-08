@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant import config_entries
-from .const import COMPONENT_TITLE, DOMAIN
 import voluptuous as vol
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME, CONF_AUTHENTICATION, CONF_TOKEN
-
+from homeassistant import config_entries
+from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_AUTHENTICATION,
+                                 CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import AuthException
+
+from .const import COMPONENT_TITLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
             }
         )
 
@@ -40,8 +41,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             data_schema = vol.Schema(
                 {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
                 }
             )
 
@@ -53,7 +54,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         with FrankEnergie as api:
             try:
-                auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                auth = await api.login(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
             except AuthException:
                 return self.async_step_login({"base": "invalid_auth"})
 
@@ -63,25 +66,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONF_USERNAME: user_input[CONF_USERNAME],
             CONF_ACCESS_TOKEN: auth.authToken,
-            CONF_TOKEN: auth.refreshToken
+            CONF_TOKEN: auth.refreshToken,
         }
 
         return await self._async_create_entry(data)
-
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         if not user_input:
             data_schema = vol.Schema(
                 {
-                vol.Required(CONF_AUTHENTICATION): bool,
+                    vol.Required(CONF_AUTHENTICATION): bool,
                 }
             )
 
-            return self.async_show_form(
-                step_id="user",
-                data_schema=data_schema
-            )
+            return self.async_show_form(step_id="user", data_schema=data_schema)
 
         if user_input[CONF_AUTHENTICATION]:
             return await self.async_step_login()
@@ -91,8 +90,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._async_create_entry(data)
 
     async def _async_create_entry(self, data):
-
         await self.async_set_unique_id(data.get(CONF_USERNAME, "frank_energie"))
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=data.get(CONF_USERNAME, "Frank Energie"), data=data)
+        return self.async_create_entry(
+            title=data.get(CONF_USERNAME, "Frank Energie"), data=data
+        )

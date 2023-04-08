@@ -10,5 +10,5 @@ COMPONENT_TITLE = "Frank Energie"
 CONF_COORDINATOR = "coordinator"
 ATTR_TIME = "from_time"
 
-DATA_ELECTRICITY = 'electricity'
-DATA_GAS = 'gas'
+DATA_ELECTRICITY = "electricity"
+DATA_GAS = "gas"
