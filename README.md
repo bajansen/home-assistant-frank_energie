@@ -26,7 +26,7 @@ Indien je deze plugin al gebruikte en hebt ingesteld via `configuration.yaml` di
 
 #### Inloggen
 
-Tijdens het instellen van de integratie wordt je gevraagd of je wilt inloggen. Op dit moment worden de mogelijkheden hiervan ontwikkeld.
+Tijdens het instellen van de integratie wordt je gevraagd of je wilt inloggen. Als je niet inlogd krijg je de huidige energietarieven van Frank Energie als sensoren, als je wel inlogd komen hier ook sensoren voor verwachte en werkele kosten voor deze maand tot nu toe.
 
 ### Gebruik
 
