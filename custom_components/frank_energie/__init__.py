@@ -19,8 +19,13 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Frank Energie component from a config entry."""
 
-    # Initialise the coordinator and save it as domain-data
+    # For backwards compat, set unique ID
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str("frank_energie")
+        )
 
+    # Initialise the coordinator and save it as domain-data
     api = FrankEnergie(clientsession=async_get_clientsession(hass), auth_token=entry.data.get(CONF_ACCESS_TOKEN, None))
     frank_coordinator = FrankEnergieCoordinator(hass, api)
 
