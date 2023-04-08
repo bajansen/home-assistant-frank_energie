@@ -51,12 +51,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        api = FrankEnergie()
-
-        try:
-            auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        except AuthException:
-            return self.async_step_login({"base": "invalid_auth"})
+        with FrankEnergie as api:
+            try:
+                auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+            except AuthException:
+                return self.async_step_login({"base": "invalid_auth"})
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
