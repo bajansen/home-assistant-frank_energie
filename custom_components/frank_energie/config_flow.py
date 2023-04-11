@@ -18,6 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Frank Energie."""
 
@@ -41,7 +42,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         async with FrankEnergie() as api:
             try:
-                auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+                auth = await api.login(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
             except AuthException as ex:
                 _LOGGER.exception("Error during login", exc_info=ex)
                 return await self.async_step_login(errors={"base": "invalid_auth"})

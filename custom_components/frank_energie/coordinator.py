@@ -5,8 +5,7 @@ import logging
 from datetime import datetime, timedelta
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import (DataUpdateCoordinator,
-                                                      UpdateFailed)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY
