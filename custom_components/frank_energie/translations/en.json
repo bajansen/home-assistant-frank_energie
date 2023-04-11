@@ -4,7 +4,7 @@
             "already_configured": "Account is already configured"
         },
         "error": {
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Credentials rejected, please check your username and password."
         },
         "step": {
             "login": {

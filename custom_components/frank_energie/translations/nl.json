@@ -4,7 +4,7 @@
             "already_configured": "Account is al toegevoegd"
         },
         "error": {
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Inloggegevens niet geaccepteerd, controller de gegevens en probeer het opnieuw."
         },
         "step": {
             "login": {

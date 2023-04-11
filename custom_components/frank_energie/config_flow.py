@@ -1,6 +1,7 @@
 """Config flow for Picnic integration."""
 from __future__ import annotations
 
+import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -15,6 +16,7 @@ from python_frank_energie.exceptions import AuthException
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Frank Energie."""
@@ -40,8 +42,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         async with FrankEnergie() as api:
             try:
                 auth = await api.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-            except AuthException:
-                return self.async_step_login({"base": "invalid_auth"})
+            except AuthException as ex:
+                _LOGGER.exception("Error during login", exc_info=ex)
+                return await self.async_step_login(errors={"base": "invalid_auth"})
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
