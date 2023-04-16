@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         clientsession=async_get_clientsession(hass),
         auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
     )
-    frank_coordinator = FrankEnergieCoordinator(hass, api)
+    frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()

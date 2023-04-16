@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is al toegevoegd"
+            "already_configured": "Account is al toegevoegd",
+            "reauth_successful": "Opnieuw inloggen gelukt"
         },
         "error": {
             "invalid_auth": "Inloggegevens niet geaccepteerd, controller de gegevens en probeer het opnieuw."
