@@ -7,8 +7,13 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_AUTHENTICATION,
-                                 CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_AUTHENTICATION,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import FlowResult
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import AuthException

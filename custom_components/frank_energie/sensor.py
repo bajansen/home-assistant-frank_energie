@@ -6,12 +6,18 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable
 
-from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
-                                             SensorEntityDescription,
-                                             SensorStateClass)
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (CURRENCY_EURO, ENERGY_KILO_WATT_HOUR,
-                                 VOLUME_CUBIC_METERS)
+from homeassistant.const import (
+    CURRENCY_EURO,
+    ENERGY_KILO_WATT_HOUR,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.core import HassJob, HomeAssistant
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -22,8 +28,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
 from python_frank_energie.models import PriceData
 
-from .const import (ATTR_TIME, ATTRIBUTION, CONF_COORDINATOR, DATA_ELECTRICITY,
-                    DATA_GAS, DATA_MONTH_SUMMARY, DOMAIN, ICON)
+from .const import (
+    ATTR_TIME,
+    ATTRIBUTION,
+    CONF_COORDINATOR,
+    DATA_ELECTRICITY,
+    DATA_GAS,
+    DATA_MONTH_SUMMARY,
+    DOMAIN,
+    ICON,
+)
 from .coordinator import FrankEnergieCoordinator
 
 _LOGGER = logging.getLogger(__name__)
