@@ -1,3 +1,6 @@
+[![latest version](https://img.shields.io/github/tag/bajansen/home-assistant-frank_energie?include_prereleases=&sort=semver&label=Versie)](https://github.com/bajansen/home-assistant-frank_energie/releases/)
+![installations](https://img.shields.io/badge/dynamic/json?label=Installaties&query=%24.frank_energie.total&url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json)
+
 # Frank Energie Custom Component voor Home Assistant
 Middels deze integratie wordt de huidige prijsinformatie van Frank Energie beschikbaar gemaakt binnen Home Assistant.
 
