@@ -209,7 +209,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="actual_costs_until_last_meter_reading_date",
-        name="Actual cost",
+        name="Actual monthly cost",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
