@@ -13,14 +13,14 @@
                     "password": "Password",
                     "username": "Username / e-mail"
                 },
-                "title": "Enter your Frank Energie information"
+                "title": "Enter your Frank Energie account credentials"
             },
             "user": {
                 "data": {
-                    "authentication": "Sign in"
+                    "authentication": "Use Frank Energie account credentials"
                 },
-                "title": "Do you want to sign in?",
-                "description": "Frank Energie can be used without account, if you only want energy price data you can skip signing in."
+                "title": "Do you want to sign in to Frank Energie?",
+                "description": "Signing in is not required for obtaining energy price data but will add additional sensors specific to your account."
             }
         }
     },
