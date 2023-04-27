@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -25,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
+from python_frank_energie.models import PriceData
 
 from .const import (
     ATTR_TIME,
@@ -32,11 +34,11 @@ from .const import (
     CONF_COORDINATOR,
     DATA_ELECTRICITY,
     DATA_GAS,
+    DATA_MONTH_SUMMARY,
     DOMAIN,
     ICON,
 )
 from .coordinator import FrankEnergieCoordinator
-from python_frank_energie.models import PriceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
 
+    authenticated: bool = False
     value_fn: Callable[[dict[PriceData]], StateType] = None
     attr_fn: Callable[[dict[PriceData]], dict[str, StateType | list]] = lambda _: {}
 
@@ -55,6 +58,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.total,
         attr_fn=lambda data: {"prices": data[DATA_ELECTRICITY].asdict("total")},
     ),
@@ -63,6 +67,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price,
         attr_fn=lambda data: {"prices": data[DATA_ELECTRICITY].asdict("market_price")},
     ),
@@ -71,6 +76,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price_with_tax,
         attr_fn=lambda data: {
             "prices": data[DATA_ELECTRICITY].asdict("market_price_with_tax")
@@ -81,6 +87,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity VAT price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.market_price_tax,
         entity_registry_enabled_default=False,
     ),
@@ -89,6 +96,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity sourcing markup",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.sourcing_markup_price,
         entity_registry_enabled_default=False,
     ),
@@ -97,6 +105,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity tax only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.energy_tax_price,
         entity_registry_enabled_default=False,
     ),
@@ -105,6 +114,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.total,
         attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("total")},
     ),
@@ -113,6 +123,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas market price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.market_price,
         attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("market_price")},
     ),
@@ -121,6 +132,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas price including tax",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.market_price_with_tax,
         attr_fn=lambda data: {"prices": data[DATA_GAS].asdict("market_price_with_tax")},
     ),
@@ -129,6 +141,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas VAT price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.market_price_tax,
         entity_registry_enabled_default=False,
     ),
@@ -137,6 +150,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas sourcing price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.sourcing_markup_price,
         entity_registry_enabled_default=False,
     ),
@@ -145,6 +159,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current gas tax only",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.energy_tax_price,
         entity_registry_enabled_default=False,
     ),
@@ -153,6 +168,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Lowest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].today_min.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_min.date_from},
     ),
@@ -161,6 +177,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Highest gas price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].today_max.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_GAS].today_max.date_from},
     ),
@@ -169,6 +186,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Lowest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].today_min.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_min.date_from},
     ),
@@ -177,6 +195,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Highest energy price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].today_max.total,
         attr_fn=lambda data: {ATTR_TIME: data[DATA_ELECTRICITY].today_max.date_from},
     ),
@@ -185,7 +204,36 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Average electricity price today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].today_avg,
+    ),
+    FrankEnergieEntityDescription(
+        key="actual_costs_until_last_meter_reading_date",
+        name="Actual monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[
+            DATA_MONTH_SUMMARY
+        ].actualCostsUntilLastMeterReadingDate,
+        attr_fn=lambda data: {
+            "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="expected_costs_until_last_meter_reading_date",
+        name="Expected monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[
+            DATA_MONTH_SUMMARY
+        ].expectedCostsUntilLastMeterReadingDate,
+        attr_fn=lambda data: {
+            "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
+        },
     ),
 )
 
@@ -198,11 +246,13 @@ async def async_setup_entry(
     """Set up Frank Energie sensor entries."""
     frank_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
-    # Add an entity for each sensor type
+    # Add an entity for each sensor type, when authenticated is True,
+    # only add the entity if the user is authenticated
     async_add_entities(
         [
             FrankEnergieSensor(frank_coordinator, description, config_entry)
             for description in SENSOR_TYPES
+            if not description.authenticated or frank_coordinator.api.is_authenticated
         ],
         True,
     )
@@ -213,17 +263,16 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
         coordinator: FrankEnergieCoordinator,
         description: FrankEnergieEntityDescription,
-        entry: ConfigEntry
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
-        self._attr_unique_id = f"frank_energie.{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}.{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Frank Energie",

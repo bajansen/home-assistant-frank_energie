@@ -1,12 +1,28 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "description": "Wil je beginnen met instellen?"
-            }
-        },
         "abort": {
-            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+            "already_configured": "Account is al toegevoegd",
+            "reauth_successful": "Opnieuw inloggen gelukt"
+        },
+        "error": {
+            "invalid_auth": "Inloggegevens niet geaccepteerd, controleer de gegevens en probeer het opnieuw."
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam / e-mail"
+                },
+                "title": "Inloggen bij Frank Energie"
+            },
+            "user": {
+                "data": {
+                    "authentication": "Gebruik Frank Energie-accountgegevens"
+                },
+                "title": "Wil je inloggen bij Frank Energie?",
+                "description": "Inloggen is niet nodig om deze integratie te kunnen gebruiken maar biedt wel de mogelijkheid extra gegevens op te halen."
+            }
         }
-    }
+    },
+    "title": "Frank Energie"
 }

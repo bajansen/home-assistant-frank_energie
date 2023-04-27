@@ -1,13 +1,17 @@
+"""Coordinator implementation for Frank Energie integration."""
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DATA_ELECTRICITY, DATA_GAS
-
 from python_frank_energie import FrankEnergie
+from python_frank_energie.exceptions import RequestException
+
+from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,10 +21,13 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
     api: FrankEnergie
 
-    def __init__(self, hass: HomeAssistant, websession) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, api: FrankEnergie
+    ) -> None:
         """Initialize the data object."""
         self.hass = hass
-        self.api = FrankEnergie(clientsession=websession)
+        self.entry = entry
+        self.api = api
 
         logger = logging.getLogger(__name__)
         super().__init__(
@@ -31,7 +38,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self) -> dict:
-        """Get the latest data from Frank Energie"""
+        """Get the latest data from Frank Energie."""
         self.logger.debug("Fetching Frank Energie data")
 
         # We request data for today up until the day after tomorrow.
@@ -43,8 +50,15 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            (data_today_electricity, data_today_gas) = await self.api.prices(today, tomorrow)
-            (data_tomorrow_electricity, data_tomorrow_gas) = await self.api.prices(tomorrow, day_after_tomorrow)
+            (data_today_electricity, data_today_gas) = await self.api.prices(
+                today, tomorrow
+            )
+            (data_tomorrow_electricity, data_tomorrow_gas) = await self.api.prices(
+                tomorrow, day_after_tomorrow
+            )
+            data_month_summary = (
+                await self.api.monthSummary() if self.api.is_authenticated else None
+            )
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
             if (
@@ -55,8 +69,12 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                 return self.data
             # Re-raise the error if there's no data from future left
             raise err
+        except RequestException as ex:
+            if str(ex).startswith("user-error:"):
+                raise ConfigEntryAuthFailed from ex
 
         return {
             DATA_ELECTRICITY: data_today_electricity + data_tomorrow_electricity,
             DATA_GAS: data_today_gas + data_tomorrow_gas,
+            DATA_MONTH_SUMMARY: data_month_summary,
         }

@@ -1,0 +1,10 @@
+# All pycache folders in all folders
+__pycache__/
+
+# HA files to allow for local development
+.HA_VERSION
+.storage/
+*.yaml
+blueprints/
+*.log*
+*.db

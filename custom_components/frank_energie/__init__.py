@@ -1,26 +1,31 @@
 """The Frank Energie component."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from python_frank_energie import FrankEnergie
 
 from .const import CONF_COORDINATOR, DOMAIN
 from .coordinator import FrankEnergieCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Frank Energie component from a config entry."""
 
+    # For backwards compatibility, set unique ID
+    if entry.unique_id is None or entry.unique_id == "frank_energie_component":
+        hass.config_entries.async_update_entry(entry, unique_id=str("frank_energie"))
+
     # Initialise the coordinator and save it as domain-data
-    web_session_client = async_get_clientsession(hass)
-    frank_coordinator = FrankEnergieCoordinator(hass, web_session_client)
+    api = FrankEnergie(
+        clientsession=async_get_clientsession(hass),
+        auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
+    )
+    frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()

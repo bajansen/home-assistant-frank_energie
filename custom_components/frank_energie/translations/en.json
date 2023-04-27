@@ -1,12 +1,28 @@
 {
     "config": {
-        "step": {
-            "user": {
-                "description": "Do you want to start setup?"
-            }
-        },
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "invalid_auth": "Credentials rejected, please check your username and password."
+        },
+        "step": {
+            "login": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username / e-mail"
+                },
+                "title": "Enter your Frank Energie account credentials"
+            },
+            "user": {
+                "data": {
+                    "authentication": "Use Frank Energie account credentials"
+                },
+                "title": "Do you want to sign in to Frank Energie?",
+                "description": "Signing in is not required for obtaining energy price data but will add additional sensors specific to your account."
+            }
         }
-    }
+    },
+    "title": "Frank Energie"
 }
