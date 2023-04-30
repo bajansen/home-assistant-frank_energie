@@ -50,12 +50,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            (data_today_electricity, data_today_gas) = await self.api.prices(
-                today, tomorrow
-            )
-            (data_tomorrow_electricity, data_tomorrow_gas) = await self.api.prices(
-                tomorrow, day_after_tomorrow
-            )
+            prices_today = await self.api.prices(today, tomorrow)
+            prices_tomorrow = await self.api.prices(tomorrow, day_after_tomorrow)
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
             )
@@ -73,8 +69,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             if str(ex).startswith("user-error:"):
                 raise ConfigEntryAuthFailed from ex
 
+            raise UpdateFailed(ex) from ex
+
         return {
-            DATA_ELECTRICITY: data_today_electricity + data_tomorrow_electricity,
-            DATA_GAS: data_today_gas + data_tomorrow_gas,
+            DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity,
+            DATA_GAS: prices_today.gas + prices_tomorrow.gas,
             DATA_MONTH_SUMMARY: data_month_summary,
         }
