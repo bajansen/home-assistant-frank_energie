@@ -72,6 +72,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._reauth_entry,
                 data=data,
             )
+
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+            )
+
             return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(user_input[CONF_USERNAME])
