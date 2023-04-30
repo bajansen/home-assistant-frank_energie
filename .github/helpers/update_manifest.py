@@ -15,6 +15,10 @@ def update_manifest():
         if value in ["--version", "-V"]:
             version = sys.argv[index + 1]
 
+    # Remove the v from the version number if it exists
+    if version[0] == "v":
+        version = version[1:]
+
     with open(
         f"{os.getcwd()}/custom_components/frank_energie/manifest.json"
     ) as manifestfile:
