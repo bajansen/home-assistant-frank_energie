@@ -1,5 +1,7 @@
-"""Update the manifest file."""
-"""Idea from https://github.com/hacs/integration/blob/main/manage/update_manifest.py"""
+"""Update the manifest file.
+
+Sets the version number in the manifest file to the version number
+"""
 
 import sys
 import json
@@ -13,7 +15,9 @@ def update_manifest():
         if value in ["--version", "-V"]:
             version = sys.argv[index + 1]
 
-    with open(f"{os.getcwd()}/custom_components/frank_energie/manifest.json") as manifestfile:
+    with open(
+        f"{os.getcwd()}/custom_components/frank_energie/manifest.json"
+    ) as manifestfile:
         manifest = json.load(manifestfile)
 
     manifest["version"] = version
