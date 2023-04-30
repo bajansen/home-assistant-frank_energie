@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import RequestException
 
-from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY
+from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
             )
+            data_invoices = await self.api.invoices() if self.api.is_authenticated else None
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
             if (
@@ -75,4 +76,5 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity,
             DATA_GAS: prices_today.gas + prices_tomorrow.gas,
             DATA_MONTH_SUMMARY: data_month_summary,
+            DATA_INVOICES: data_invoices,
         }

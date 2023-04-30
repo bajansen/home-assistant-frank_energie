@@ -34,6 +34,7 @@ from .const import (
     CONF_COORDINATOR,
     DATA_ELECTRICITY,
     DATA_GAS,
+    DATA_INVOICES,
     DATA_MONTH_SUMMARY,
     DOMAIN,
     ICON,
@@ -233,6 +234,51 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         ].expectedCostsUntilLastMeterReadingDate,
         attr_fn=lambda data: {
             "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_previous_period",
+        name="Invoice previous period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[
+            DATA_INVOICES
+        ].previousPeriodInvoice.TotalAmount,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].previousPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].previousPeriodInvoice.PeriodDescription,
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_current_period",
+        name="Invoice current period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[
+            DATA_INVOICES
+        ].currentPeriodInvoice.TotalAmount,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].currentPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].currentPeriodInvoice.PeriodDescription,
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_upcoming_period",
+        name="Invoice upcoming period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[
+            DATA_INVOICES
+        ].upcomingPeriodInvoice.TotalAmount,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].upcomingPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].upcomingPeriodInvoice.PeriodDescription,
         },
     ),
 )
