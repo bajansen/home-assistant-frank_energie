@@ -1,9 +1,10 @@
 """Frank Energie current electricity and gas price information service."""
 from __future__ import annotations
+from decimal import Decimal
 
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
@@ -49,8 +50,8 @@ class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
 
     authenticated: bool = False
-    value_fn: Callable[[dict[PriceData]], StateType] = None
-    attr_fn: Callable[[dict[PriceData]], dict[str, StateType | list]] = lambda _: {}
+    value_fn: Callable[[dict], StateType] = None
+    attr_fn: Callable[[dict], dict[str, StateType | list]] = lambda _: {}
 
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
@@ -243,9 +244,9 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
-        value_fn=lambda data: data[
-            DATA_INVOICES
-        ].previousPeriodInvoice.TotalAmount,
+        value_fn=lambda data: data[DATA_INVOICES].previousPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].previousPeriodInvoice
+        else None,
         attr_fn=lambda data: {
             "Start date": data[DATA_INVOICES].previousPeriodInvoice.StartDate,
             "Description": data[DATA_INVOICES].previousPeriodInvoice.PeriodDescription,
@@ -258,9 +259,9 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
-        value_fn=lambda data: data[
-            DATA_INVOICES
-        ].currentPeriodInvoice.TotalAmount,
+        value_fn=lambda data: data[DATA_INVOICES].currentPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].currentPeriodInvoice
+        else None,
         attr_fn=lambda data: {
             "Start date": data[DATA_INVOICES].currentPeriodInvoice.StartDate,
             "Description": data[DATA_INVOICES].currentPeriodInvoice.PeriodDescription,
@@ -273,9 +274,9 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
-        value_fn=lambda data: data[
-            DATA_INVOICES
-        ].upcomingPeriodInvoice.TotalAmount,
+        value_fn=lambda data: data[DATA_INVOICES].upcomingPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].upcomingPeriodInvoice
+        else None,
         attr_fn=lambda data: {
             "Start date": data[DATA_INVOICES].upcomingPeriodInvoice.StartDate,
             "Description": data[DATA_INVOICES].upcomingPeriodInvoice.PeriodDescription,
@@ -367,3 +368,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.native_value is not None

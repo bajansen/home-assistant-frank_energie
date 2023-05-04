@@ -55,7 +55,9 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
             )
-            data_invoices = await self.api.invoices() if self.api.is_authenticated else None
+            data_invoices = (
+                await self.api.invoices() if self.api.is_authenticated else None
+            )
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
             if (
