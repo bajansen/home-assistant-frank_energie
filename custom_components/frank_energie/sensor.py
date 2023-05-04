@@ -1,10 +1,9 @@
 """Frank Energie current electricity and gas price information service."""
 from __future__ import annotations
-from decimal import Decimal
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 from typing import Any, Callable
 
 from homeassistant.components.sensor import (
@@ -27,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
-from python_frank_energie.models import PriceData
 
 from .const import (
     ATTR_TIME,
