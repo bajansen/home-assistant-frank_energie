@@ -223,7 +223,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="expected_costs_until_last_meter_reading_date",
-        name="Expected monthly cost",
+        name="Expected monthly cost until now",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -234,6 +234,15 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         attr_fn=lambda data: {
             "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
         },
+    ),
+    FrankEnergieEntityDescription(
+        key="expected_costs_this_month",
+        name="Expected cost this month",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[DATA_MONTH_SUMMARY].expectedCosts,
     ),
 )
 
