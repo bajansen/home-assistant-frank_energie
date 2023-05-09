@@ -247,6 +247,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_MONTH_SUMMARY].expectedCosts,
     ),
     FrankEnergieEntityDescription(
@@ -256,6 +257,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].previousPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].previousPeriodInvoice
         else None,
@@ -271,6 +273,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].currentPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].currentPeriodInvoice
         else None,
@@ -286,6 +289,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].upcomingPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].upcomingPeriodInvoice
         else None,
