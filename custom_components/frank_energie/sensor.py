@@ -243,9 +243,6 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
         value_fn=lambda data: data[DATA_MONTH_SUMMARY].expectedCosts,
-        attr_fn=lambda data: {
-            "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
-        },
     ),
     FrankEnergieEntityDescription(
         key="invoice_previous_period",
