@@ -26,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import utcnow
-from python_frank_energie.models import PriceData
 
 from .const import (
     ATTR_TIME,
@@ -34,6 +33,7 @@ from .const import (
     CONF_COORDINATOR,
     DATA_ELECTRICITY,
     DATA_GAS,
+    DATA_INVOICES,
     DATA_MONTH_SUMMARY,
     DOMAIN,
     ICON,
@@ -50,9 +50,9 @@ class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
 
     authenticated: bool = False
-    value_fn: Callable[[dict[PriceData]], StateType] = None
-    attr_fn: Callable[[dict[PriceData]], dict[str, StateType | list]] = lambda _: {}
     service_name: str | None = SERVICE_NAME_PRICES
+    value_fn: Callable[[dict], StateType] = None
+    attr_fn: Callable[[dict], dict[str, StateType | list]] = lambda _: {}
 
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
@@ -227,7 +227,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
     ),
     FrankEnergieEntityDescription(
         key="expected_costs_until_last_meter_reading_date",
-        name="Expected monthly cost",
+        name="Expected monthly cost until now",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
@@ -238,6 +238,60 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         ].expectedCostsUntilLastMeterReadingDate,
         attr_fn=lambda data: {
             "Last update": data[DATA_MONTH_SUMMARY].lastMeterReadingDate
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="expected_costs_this_month",
+        name="Expected cost this month",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[DATA_MONTH_SUMMARY].expectedCosts,
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_previous_period",
+        name="Invoice previous period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[DATA_INVOICES].previousPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].previousPeriodInvoice
+        else None,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].previousPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].previousPeriodInvoice.PeriodDescription,
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_current_period",
+        name="Invoice current period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[DATA_INVOICES].currentPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].currentPeriodInvoice
+        else None,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].currentPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].currentPeriodInvoice.PeriodDescription,
+        },
+    ),
+    FrankEnergieEntityDescription(
+        key="invoice_upcoming_period",
+        name="Invoice upcoming period",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=CURRENCY_EURO,
+        authenticated=True,
+        value_fn=lambda data: data[DATA_INVOICES].upcomingPeriodInvoice.TotalAmount
+        if data[DATA_INVOICES].upcomingPeriodInvoice
+        else None,
+        attr_fn=lambda data: {
+            "Start date": data[DATA_INVOICES].upcomingPeriodInvoice.StartDate,
+            "Description": data[DATA_INVOICES].upcomingPeriodInvoice.PeriodDescription,
         },
     ),
 )
@@ -333,3 +387,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.native_value is not None
