@@ -37,6 +37,8 @@ from .const import (
     DATA_MONTH_SUMMARY,
     DOMAIN,
     ICON,
+    SERVICE_NAME_PRICES,
+    SERVICE_NAME_COSTS,
 )
 from .coordinator import FrankEnergieCoordinator
 
@@ -48,6 +50,7 @@ class FrankEnergieEntityDescription(SensorEntityDescription):
     """Describes Frank Energie sensor entity."""
 
     authenticated: bool = False
+    service_name: str | None = SERVICE_NAME_PRICES
     value_fn: Callable[[dict], StateType] = None
     attr_fn: Callable[[dict], dict[str, StateType | list]] = lambda _: {}
 
@@ -214,6 +217,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[
             DATA_MONTH_SUMMARY
         ].actualCostsUntilLastMeterReadingDate,
@@ -228,6 +232,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[
             DATA_MONTH_SUMMARY
         ].expectedCostsUntilLastMeterReadingDate,
@@ -242,6 +247,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_MONTH_SUMMARY].expectedCosts,
     ),
     FrankEnergieEntityDescription(
@@ -251,6 +257,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].previousPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].previousPeriodInvoice
         else None,
@@ -266,6 +273,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].currentPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].currentPeriodInvoice
         else None,
@@ -281,6 +289,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EURO,
         authenticated=True,
+        service_name=SERVICE_NAME_COSTS,
         value_fn=lambda data: data[DATA_INVOICES].upcomingPeriodInvoice.TotalAmount
         if data[DATA_INVOICES].upcomingPeriodInvoice
         else None,
@@ -327,9 +336,16 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description: FrankEnergieEntityDescription = description
         self._attr_unique_id = f"{entry.unique_id}.{description.key}"
+
+        # Do not set extra identifier for default service, backwards compatibility
+        if description.service_name is SERVICE_NAME_PRICES:
+            device_info_identifiers = {(DOMAIN, f"{entry.entry_id}")}
+        else:
+            device_info_identifiers = {(DOMAIN, f"{entry.entry_id}", description.service_name)}
+
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name="Frank Energie",
+            identifiers=device_info_identifiers,
+            name=f"Frank Energie - {description.service_name}",
             default_manufacturer="Frank Energie",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.frankenergie.nl/goedkoop",
