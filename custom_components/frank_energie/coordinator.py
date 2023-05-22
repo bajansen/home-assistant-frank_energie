@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,10 +11,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import RequestException
+from python_frank_energie.models import PriceData, MonthSummary, Invoices
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
 
 LOGGER = logging.getLogger(__name__)
+
+
+class FrankEnergieData(TypedDict):
+    DATA_ELECTRICITY: PriceData
+    DATA_GAS: PriceData
+    DATA_MONTH_SUMMARY: MonthSummary | None
+    DATA_INVOICES: Invoices | None
 
 
 class FrankEnergieCoordinator(DataUpdateCoordinator):
@@ -37,7 +46,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=60),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> FrankEnergieData:
         """Get the latest data from Frank Energie."""
         self.logger.debug("Fetching Frank Energie data")
 
@@ -50,8 +59,13 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            prices_today = await self.api.prices(today, tomorrow)
-            prices_tomorrow = await self.api.prices(tomorrow, day_after_tomorrow)
+            if self.api.is_authenticated:
+                prices_today = await self.api.userPrices(today)
+                prices_tomorrow = await self.api.userPrices(tomorrow)
+            else:
+                prices_today = await self.api.prices(today, tomorrow)
+                prices_tomorrow = await self.api.prices(tomorrow, day_after_tomorrow)
+
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
             )
