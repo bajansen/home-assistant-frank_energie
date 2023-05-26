@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import TypedDict
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import RequestException
-from python_frank_energie.models import PriceData, MonthSummary, Invoices
+from python_frank_energie.models import PriceData, MonthSummary, Invoices, MarketPrices
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
 
@@ -59,12 +59,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            if self.api.is_authenticated:
-                prices_today = await self.api.userPrices(today)
-                prices_tomorrow = await self.api.userPrices(tomorrow)
-            else:
-                prices_today = await self.api.prices(today, tomorrow)
-                prices_tomorrow = await self.api.prices(tomorrow, day_after_tomorrow)
+            prices_today = self.__fetch_prices_with_fallback(today, tomorrow)
+            prices_tomorrow = self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
 
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
@@ -94,3 +90,24 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             DATA_MONTH_SUMMARY: data_month_summary,
             DATA_INVOICES: data_invoices,
         }
+
+    def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
+        if not self.api.is_authenticated:
+            return await self.api.prices(start_date, end_date)
+        else:
+            user_prices = await self.api.userPrices(start_date)
+
+            if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
+                # If user_prices are available for both gas and electricity return them
+                return user_prices
+            else:
+                public_prices = await self.api.prices(start_date, end_date)
+
+                # Use public prices if no user prices are available
+                if len(user_prices.gas.all) == 0:
+                    user_prices.gas = public_prices.gas
+
+                if len(user_prices.electricity.all) == 0:
+                    user_prices.electricity = public_prices.electricity
+
+                return user_prices
