@@ -59,8 +59,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            prices_today = self.__fetch_prices_with_fallback(today, tomorrow)
-            prices_tomorrow = self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
+            prices_today = await self.__fetch_prices_with_fallback(today, tomorrow)
+            prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
 
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
@@ -91,7 +91,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             DATA_INVOICES: data_invoices,
         }
 
-    def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
+    async def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
         if not self.api.is_authenticated:
             return await self.api.prices(start_date, end_date)
         else:
@@ -105,9 +105,11 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
                 # Use public prices if no user prices are available
                 if len(user_prices.gas.all) == 0:
+                    LOGGER.info("No gas prices found for user, falling back to public prices")
                     user_prices.gas = public_prices.gas
 
                 if len(user_prices.electricity.all) == 0:
+                    LOGGER.info("No electricity prices found for user, falling back to public prices")
                     user_prices.electricity = public_prices.electricity
 
                 return user_prices
