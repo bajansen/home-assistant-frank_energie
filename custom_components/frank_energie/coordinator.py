@@ -38,17 +38,15 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         self.entry = entry
         self.api = api
 
-        logger = logging.getLogger(__name__)
         super().__init__(
             hass,
-            logger,
             name="Frank Energie coordinator",
             update_interval=timedelta(minutes=60),
         )
 
     async def _async_update_data(self) -> FrankEnergieData:
         """Get the latest data from Frank Energie."""
-        self.logger.debug("Fetching Frank Energie data")
+        LOGGER.debug("Fetching Frank Energie data")
 
         # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
