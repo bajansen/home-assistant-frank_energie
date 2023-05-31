@@ -40,6 +40,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
         super().__init__(
             hass,
+            LOGGER,
             name="Frank Energie coordinator",
             update_interval=timedelta(minutes=60),
         )
