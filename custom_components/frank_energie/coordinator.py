@@ -113,4 +113,3 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                     user_prices.electricity = public_prices.electricity
 
                 return user_prices
-
