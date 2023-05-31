@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from typing import TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -10,10 +11,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import RequestException
+from python_frank_energie.models import PriceData, MonthSummary, Invoices, MarketPrices
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
 
 LOGGER = logging.getLogger(__name__)
+
+
+class FrankEnergieData(TypedDict):
+    DATA_ELECTRICITY: PriceData
+    DATA_GAS: PriceData
+    DATA_MONTH_SUMMARY: MonthSummary | None
+    DATA_INVOICES: Invoices | None
 
 
 class FrankEnergieCoordinator(DataUpdateCoordinator):
@@ -37,7 +46,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=60),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> FrankEnergieData:
         """Get the latest data from Frank Energie."""
         self.logger.debug("Fetching Frank Energie data")
 
@@ -50,8 +59,9 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # Fetch data for today and tomorrow separately,
         # because the gas prices response only contains data for the first day of the query
         try:
-            prices_today = await self.api.prices(today, tomorrow)
-            prices_tomorrow = await self.api.prices(tomorrow, day_after_tomorrow)
+            prices_today = await self.__fetch_prices_with_fallback(today, tomorrow)
+            prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
+
             data_month_summary = (
                 await self.api.monthSummary() if self.api.is_authenticated else None
             )
@@ -80,3 +90,26 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             DATA_MONTH_SUMMARY: data_month_summary,
             DATA_INVOICES: data_invoices,
         }
+
+    async def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
+        if not self.api.is_authenticated:
+            return await self.api.prices(start_date, end_date)
+        else:
+            user_prices = await self.api.userPrices(start_date)
+
+            if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
+                # If user_prices are available for both gas and electricity return them
+                return user_prices
+            else:
+                public_prices = await self.api.prices(start_date, end_date)
+
+                # Use public prices if no user prices are available
+                if len(user_prices.gas.all) == 0:
+                    LOGGER.info("No gas prices found for user, falling back to public prices")
+                    user_prices.gas = public_prices.gas
+
+                if len(user_prices.electricity.all) == 0:
+                    LOGGER.info("No electricity prices found for user, falling back to public prices")
+                    user_prices.electricity = public_prices.electricity
+
+                return user_prices
