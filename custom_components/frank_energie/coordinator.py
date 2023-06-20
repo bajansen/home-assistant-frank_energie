@@ -7,10 +7,11 @@ from typing import TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
-from python_frank_energie.exceptions import RequestException
+from python_frank_energie.exceptions import RequestException, AuthException
 from python_frank_energie.models import PriceData, MonthSummary, Invoices, MarketPrices
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
@@ -62,7 +63,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
 
             data_month_summary = (
-                await self.api.monthSummary() if self.api.is_authenticated else None
+                await self.api.month_summary() if self.api.is_authenticated else None
             )
             data_invoices = (
                 await self.api.invoices() if self.api.is_authenticated else None
@@ -83,6 +84,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
             raise UpdateFailed(ex) from ex
 
+        except AuthException as ex:
+            LOGGER.debug("Authentication tokens expired, trying to renew them (%s)", ex)
+            self.__try_renew_token()
+
         return {
             DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity,
             DATA_GAS: prices_today.gas + prices_tomorrow.gas,
@@ -94,7 +99,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         if not self.api.is_authenticated:
             return await self.api.prices(start_date, end_date)
         else:
-            user_prices = await self.api.userPrices(start_date)
+            user_prices = await self.api.user_prices(start_date)
 
             if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
                 # If user_prices are available for both gas and electricity return them
@@ -112,3 +117,20 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
                     user_prices.electricity = public_prices.electricity
 
                 return user_prices
+
+    async def __try_renew_token(self):
+
+        try:
+            updated_tokens = await self.api.renew_token()
+
+            data = {
+                CONF_ACCESS_TOKEN: updated_tokens.authToken,
+                CONF_TOKEN: updated_tokens.refreshToken,
+            }
+            self.hass.config_entries.async_update_entry(self.entry, data=data)
+
+            LOGGER.debug("Successfully renewed token")
+
+        except AuthException as ex:
+            LOGGER.error("Failed to renew token: %s. Starting user reauth flow", ex)
+            raise ConfigEntryAuthFailed from ex

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from python_frank_energie import FrankEnergie
@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = FrankEnergie(
         clientsession=async_get_clientsession(hass),
         auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
+        refresh_token=entry.data.get(CONF_TOKEN, None),
     )
     frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 
