@@ -86,8 +86,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
 
         except AuthException as ex:
             LOGGER.debug("Authentication tokens expired, trying to renew them (%s)", ex)
-            await self.__try_renew_token()    
-            
+            await self.__try_renew_token()
             # Tell we have no data, so update coordinator tries again with renewed tokens
             raise UpdateFailed(ex) from ex
 
