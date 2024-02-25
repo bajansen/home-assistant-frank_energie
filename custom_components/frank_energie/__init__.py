@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=str("frank_energie"))
 
     # Select site-reference, or find first one that has status 'IN_DELIVERY' if not set
-    if entry.data.get("site_reference") is None:
+    if entry.data.get("site_reference") is None and entry.data.get(CONF_ACCESS_TOKEN) is not None:
         api = FrankEnergie(
             clientsession=async_get_clientsession(hass),
             auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
         refresh_token=entry.data.get(CONF_TOKEN, None),
     )
-    frank_coordinator = FrankEnergieCoordinator(hass, entry, api, entry.data.get("site_reference"))
+    frank_coordinator = FrankEnergieCoordinator(hass, entry, api, entry.data.get("site_reference", None))
 
     # Fetch initial data, so we have data when entities subscribe and set up the platform
     await frank_coordinator.async_config_entry_first_refresh()
