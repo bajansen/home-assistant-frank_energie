@@ -32,12 +32,13 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
     api: FrankEnergie
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: FrankEnergie
+        self, hass: HomeAssistant, entry: ConfigEntry, api: FrankEnergie, site_reference: str
     ) -> None:
         """Initialize the data object."""
         self.hass = hass
         self.entry = entry
         self.api = api
+        self.site_reference = site_reference
 
         super().__init__(
             hass,
@@ -63,10 +64,10 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
 
             data_month_summary = (
-                await self.api.month_summary() if self.api.is_authenticated else None
+                await self.api.month_summary(self.site_reference) if self.api.is_authenticated else None
             )
             data_invoices = (
-                await self.api.invoices() if self.api.is_authenticated else None
+                await self.api.invoices(self.site_reference) if self.api.is_authenticated else None
             )
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
@@ -101,7 +102,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         if not self.api.is_authenticated:
             return await self.api.prices(start_date, end_date)
         else:
-            user_prices = await self.api.user_prices(start_date)
+            user_prices = await self.api.user_prices(start_date, self.site_reference)
 
             if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
                 # If user_prices are available for both gas and electricity return them
