@@ -113,6 +113,14 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     FrankEnergieEntityDescription(
+        key="elec_billed",
+        name="Current electricity billed",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.sourcing_markup_price + data[DATA_ELECTRICITY].current_hour.market_price_with_tax,
+    ),
+    FrankEnergieEntityDescription(
         key="gas_markup",
         name="Current gas price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
@@ -165,6 +173,14 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_GAS].current_hour.energy_tax_price,
         entity_registry_enabled_default=False,
+    ),
+    FrankEnergieEntityDescription(
+        key="gas_billed",
+        name="Current gas billed",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data[DATA_GAS].current_hour.sourcing_markup_price + data[DATA_GAS].current_hour.market_price_with_tax,
     ),
     FrankEnergieEntityDescription(
         key="gas_min",
