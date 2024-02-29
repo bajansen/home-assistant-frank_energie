@@ -32,13 +32,13 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
     api: FrankEnergie
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: FrankEnergie, site_reference: str | None
+        self, hass: HomeAssistant, entry: ConfigEntry, api: FrankEnergie,
     ) -> None:
         """Initialize the data object."""
         self.hass = hass
         self.entry = entry
         self.api = api
-        self.site_reference = site_reference
+        self.site_reference = entry.data.get("site_reference", None)
 
         super().__init__(
             hass,
