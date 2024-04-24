@@ -99,8 +99,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise Exception("No suitable sites found for this account")
 
             site_options = [{"value": site.reference, "label": self.create_title(site)} for site in me.deliverySites]
+            default_site = me.deliverySites[0].reference
 
-            options = {vol.Required(CONF_SITE, default=me.deliverySites[0].reference): SelectSelector(SelectSelectorConfig(
+            options = {vol.Required(CONF_SITE, default=default_site): SelectSelector(SelectSelectorConfig(
                 options=site_options,
                 mode=SelectSelectorMode.LIST,
             ))}
