@@ -8,6 +8,7 @@ ICON = "mdi:currency-eur"
 COMPONENT_TITLE = "Frank Energie"
 
 CONF_COORDINATOR = "coordinator"
+CONF_SITE = "site_reference"
 ATTR_TIME = "from_time"
 
 DATA_ELECTRICITY = "electricity"
