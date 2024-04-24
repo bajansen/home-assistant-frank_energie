@@ -1,4 +1,4 @@
-"""The Frank Energie component."""
+"""The Frank Energie integration."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,9 +12,8 @@ from .coordinator import FrankEnergieCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Frank Energie component from a config entry."""
+    """Set up the Frank Energie integration from a config entry."""
 
     # For backwards compatibility, set unique ID
     if entry.unique_id is None or entry.unique_id == "frank_energie_component":
