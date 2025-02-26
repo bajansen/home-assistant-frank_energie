@@ -1,4 +1,4 @@
-"""The Frank Energie component."""
+"""The Frank Energie integration."""
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,35 +14,11 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Frank Energie component from a config entry."""
+    """Set up the Frank Energie integration from a config entry."""
 
     # For backwards compatibility, set unique ID
     if entry.unique_id is None or entry.unique_id == "frank_energie_component":
         hass.config_entries.async_update_entry(entry, unique_id=str("frank_energie"))
-
-    # Select site-reference, or find first one that has status 'IN_DELIVERY' if not set
-    if entry.data.get("site_reference") is None and entry.data.get(CONF_ACCESS_TOKEN) is not None:
-        api = FrankEnergie(
-            clientsession=async_get_clientsession(hass),
-            auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
-            refresh_token=entry.data.get(CONF_TOKEN, None),
-        )
-        me = await api.me()
-
-        # filter out all sites that are not in delivery
-        me.deliverySites = [site for site in me.deliverySites if site.status == "IN_DELIVERY"]
-
-        if len(me.deliverySites) == 0:
-            raise Exception("No suitable sites found for this account")
-
-        site = me.deliverySites[0]
-        hass.config_entries.async_update_entry(entry, data={**entry.data, "site_reference": site.reference})
-
-        # Update title
-        title = f"{site.address_street} {site.address_houseNumber}"
-        if site.address_houseNumberAddition is not None:
-            title += f" {site.address_houseNumberAddition}"
-        hass.config_entries.async_update_entry(entry, title=title)
 
     # Initialise the coordinator and save it as domain-data
     api = FrankEnergie(
