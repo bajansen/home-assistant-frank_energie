@@ -22,6 +22,7 @@ Installatie via HACS is mogelijk door deze repository toe te voegen als [custom 
 
 De Frank Energie integratie kan worden toegevoegd via de 'Integraties' pagina in de instellingen.
 Vervolgens kunnen sensoren per stuk worden uitgeschakeld of verborgen indien gewenst.
+Tijdens het instellen kan je nu ook een land kiezen (NL of BE). Deze keuze wordt meegestuurd als `x-country` header bij requests naar de Frank API.
 
 #### Let op!
 

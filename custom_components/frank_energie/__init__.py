@@ -1,14 +1,18 @@
 """The Frank Energie component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from python_frank_energie import FrankEnergie
 
-from .const import CONF_COORDINATOR, DOMAIN
+from .api import FrankEnergieWithCountry
+from .const import CONF_COORDINATOR, CONF_COUNTRY, DEFAULT_COUNTRY, DOMAIN
 from .coordinator import FrankEnergieCoordinator
+
+LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -20,35 +24,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None or entry.unique_id == "frank_energie_component":
         hass.config_entries.async_update_entry(entry, unique_id=str("frank_energie"))
 
+    country = entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY)
+
     # Select site-reference, or find first one that has status 'IN_DELIVERY' if not set
     if entry.data.get("site_reference") is None and entry.data.get(CONF_ACCESS_TOKEN) is not None:
-        api = FrankEnergie(
+        api = FrankEnergieWithCountry(
             clientsession=async_get_clientsession(hass),
             auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
             refresh_token=entry.data.get(CONF_TOKEN, None),
+            country=country,
         )
-        me = await api.me()
+        sites = await api.user_sites()
+        in_delivery_sites = [site for site in sites if site.status == "IN_DELIVERY"]
+        site = in_delivery_sites[0] if in_delivery_sites else sites[0] if sites else None
 
-        # filter out all sites that are not in delivery
-        me.deliverySites = [site for site in me.deliverySites if site.status == "IN_DELIVERY"]
-
-        if len(me.deliverySites) == 0:
+        if site is None:
             raise Exception("No suitable sites found for this account")
 
-        site = me.deliverySites[0]
+        if site.status != "IN_DELIVERY":
+            LOGGER.info("No IN_DELIVERY site found; using first available site: %s", site.reference)
+
         hass.config_entries.async_update_entry(entry, data={**entry.data, "site_reference": site.reference})
 
         # Update title
-        title = f"{site.address_street} {site.address_houseNumber}"
+        street = site.address_street or "Frank Energie"
+        house_number = site.address_houseNumber or ""
+        title = f"{street} {house_number}".strip()
         if site.address_houseNumberAddition is not None:
             title += f" {site.address_houseNumberAddition}"
         hass.config_entries.async_update_entry(entry, title=title)
 
     # Initialise the coordinator and save it as domain-data
-    api = FrankEnergie(
+    api = FrankEnergieWithCountry(
         clientsession=async_get_clientsession(hass),
         auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
         refresh_token=entry.data.get(CONF_TOKEN, None),
+        country=country,
     )
     frank_coordinator = FrankEnergieCoordinator(hass, entry, api)
 

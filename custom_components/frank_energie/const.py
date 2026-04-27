@@ -6,6 +6,9 @@ DOMAIN = "frank_energie"
 DATA_URL = "https://frank-graphql-prod.graphcdn.app/"
 ICON = "mdi:currency-eur"
 COMPONENT_TITLE = "Frank Energie"
+CONF_COUNTRY = "country"
+DEFAULT_COUNTRY = "NL"
+SUPPORTED_COUNTRIES = ["NL", "BE"]
 
 CONF_COORDINATOR = "coordinator"
 ATTR_TIME = "from_time"

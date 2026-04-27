@@ -57,39 +57,22 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         tomorrow = today + timedelta(days=1)
         day_after_tomorrow = today + timedelta(days=2)
 
-        # Fetch data for today and tomorrow separately,
-        # because the gas prices response only contains data for the first day of the query
         try:
-            prices_today = await self.__fetch_prices_with_fallback(today, tomorrow)
-            prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
-
-            data_month_summary = (
-                await self.api.month_summary(self.site_reference) if self.api.is_authenticated else None
-            )
-            data_invoices = (
-                await self.api.invoices(self.site_reference) if self.api.is_authenticated else None
+            prices_today, prices_tomorrow = await self.__fetch_prices_for_window(
+                today,
+                tomorrow,
+                day_after_tomorrow,
             )
         except UpdateFailed as err:
-            # Check if we still have data to work with, if so, return this data. Still log the error as warning
             if (
                 self.data[DATA_ELECTRICITY].get_future_prices()
                 and self.data[DATA_GAS].get_future_prices()
             ):
                 LOGGER.warning(str(err))
                 return self.data
-            # Re-raise the error if there's no data from future left
             raise err
-        except RequestException as ex:
-            if str(ex).startswith("user-error:"):
-                raise ConfigEntryAuthFailed from ex
 
-            raise UpdateFailed(ex) from ex
-
-        except AuthException as ex:
-            LOGGER.debug("Authentication tokens expired, trying to renew them (%s)", ex)
-            await self.__try_renew_token()
-            # Tell we have no data, so update coordinator tries again with renewed tokens
-            raise UpdateFailed(ex) from ex
+        data_month_summary, data_invoices = await self.__fetch_optional_account_data()
 
         return {
             DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity,
@@ -98,28 +81,99 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             DATA_INVOICES: data_invoices,
         }
 
+    async def __fetch_prices_for_window(
+        self,
+        today: date,
+        tomorrow: date,
+        day_after_tomorrow: date,
+    ) -> tuple[MarketPrices, MarketPrices]:
+        """Fetch market prices for two consecutive days."""
+        # Fetch data for today and tomorrow separately,
+        # because the gas prices response only contains data for the first day of the query
+        try:
+            prices_today = await self.__fetch_prices_with_fallback(today, tomorrow)
+            prices_tomorrow = await self.__fetch_prices_with_fallback(
+                tomorrow,
+                day_after_tomorrow,
+            )
+            return prices_today, prices_tomorrow
+        except RequestException as ex:
+            if str(ex).startswith("user-error:"):
+                raise ConfigEntryAuthFailed from ex
+            raise UpdateFailed(ex) from ex
+        except AuthException as ex:
+            LOGGER.debug(
+                "Authentication tokens expired, trying to renew them (%s)",
+                ex,
+            )
+            await self.__try_renew_token()
+            # Tell we have no data, so update coordinator tries again with renewed tokens.
+            raise UpdateFailed(ex) from ex
+
+    async def __fetch_optional_account_data(
+        self,
+    ) -> tuple[MonthSummary | None, Invoices | None]:
+        """Fetch optional authenticated-only account data."""
+        if not self.api.is_authenticated or not self.site_reference:
+            return None, None
+
+        data_month_summary = None
+        data_invoices = None
+
+        try:
+            data_month_summary = await self.api.month_summary(self.site_reference)
+        except RequestException as ex:
+            LOGGER.warning(
+                "Failed to fetch month summary for site %s: %s",
+                self.site_reference,
+                ex,
+            )
+
+        try:
+            data_invoices = await self.api.invoices(self.site_reference)
+        except RequestException as ex:
+            LOGGER.warning(
+                "Failed to fetch invoices for site %s: %s",
+                self.site_reference,
+                ex,
+            )
+
+        return data_month_summary, data_invoices
+
     async def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
         if not self.api.is_authenticated:
             return await self.api.prices(start_date, end_date)
-        else:
+
+        if not self.site_reference:
+            LOGGER.info("No site reference configured; using public prices")
+            return await self.api.prices(start_date, end_date)
+
+        try:
             user_prices = await self.api.user_prices(start_date, self.site_reference)
+        except RequestException as ex:
+            LOGGER.warning(
+                "Failed to fetch user prices for site %s, falling back to public prices: %s",
+                self.site_reference,
+                ex,
+            )
+            return await self.api.prices(start_date, end_date)
 
-            if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
-                # If user_prices are available for both gas and electricity return them
-                return user_prices
-            else:
-                public_prices = await self.api.prices(start_date, end_date)
+        if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
+            # If user_prices are available for both gas and electricity return them
+            return user_prices
+        else:
+            public_prices = await self.api.prices(start_date, end_date)
 
-                # Use public prices if no user prices are available
-                if len(user_prices.gas.all) == 0:
-                    LOGGER.info("No gas prices found for user, falling back to public prices")
-                    user_prices.gas = public_prices.gas
+            # Use public prices if no user prices are available
+            if len(user_prices.gas.all) == 0:
+                LOGGER.info("No gas prices found for user, falling back to public prices")
+                user_prices.gas = public_prices.gas
 
-                if len(user_prices.electricity.all) == 0:
-                    LOGGER.info("No electricity prices found for user, falling back to public prices")
-                    user_prices.electricity = public_prices.electricity
+            if len(user_prices.electricity.all) == 0:
+                LOGGER.info("No electricity prices found for user, falling back to public prices")
+                user_prices.electricity = public_prices.electricity
 
-                return user_prices
+            return user_prices
 
     async def __try_renew_token(self):
 
@@ -127,6 +181,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             updated_tokens = await self.api.renew_token()
 
             data = {
+                **self.entry.data,
                 CONF_ACCESS_TOKEN: updated_tokens.authToken,
                 CONF_TOKEN: updated_tokens.refreshToken,
             }
