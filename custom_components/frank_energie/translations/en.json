@@ -17,7 +17,8 @@
             },
             "user": {
                 "data": {
-                    "authentication": "Use Frank Energie account credentials"
+                    "authentication": "Use Frank Energie account credentials",
+                    "country": "Country for price data"
                 },
                 "title": "Do you want to sign in to Frank Energie?",
                 "description": "Signing in is not required for obtaining energy price data but will add additional sensors specific to your account."

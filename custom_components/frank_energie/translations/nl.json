@@ -17,7 +17,8 @@
             },
             "user": {
                 "data": {
-                    "authentication": "Gebruik Frank Energie-accountgegevens"
+                    "authentication": "Gebruik Frank Energie-accountgegevens",
+                    "country": "Land voor prijsdata"
                 },
                 "title": "Wil je inloggen bij Frank Energie?",
                 "description": "Inloggen is niet nodig om deze integratie te kunnen gebruiken maar biedt wel de mogelijkheid extra gegevens op te halen."

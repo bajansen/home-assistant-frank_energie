@@ -362,7 +362,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
             self._attr_native_value = self.entity_description.value_fn(
                 self.coordinator.data
             )
-        except (TypeError, IndexError, ValueError):
+        except (TypeError, IndexError, ValueError, AttributeError):
             # No data available
             self._attr_native_value = None
 
@@ -390,7 +390,10 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self.coordinator.data)
+        try:
+            return self.entity_description.attr_fn(self.coordinator.data)
+        except (TypeError, ValueError, AttributeError):
+            return {}
 
     @property
     def available(self) -> bool:

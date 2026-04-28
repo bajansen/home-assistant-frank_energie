@@ -15,10 +15,10 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResult
-from python_frank_energie import FrankEnergie
 from python_frank_energie.exceptions import AuthException
 
-from .const import DOMAIN
+from .api import FrankEnergieWithCountry
+from .const import CONF_COUNTRY, DEFAULT_COUNTRY, DOMAIN, SUPPORTED_COUNTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._reauth_entry = None
+        self._country = DEFAULT_COUNTRY
 
     async def async_step_login(self, user_input=None, errors=None) -> FlowResult:
         """Handle login with credentials by user."""
@@ -52,7 +53,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        async with FrankEnergie() as api:
+        if self._reauth_entry is not None:
+            self._country = self._reauth_entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY)
+
+        async with FrankEnergieWithCountry(country=self._country) as api:
             try:
                 auth = await api.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
@@ -62,6 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_login(errors={"base": "invalid_auth"})
 
         data = {
+            CONF_COUNTRY: self._country,
             CONF_USERNAME: user_input[CONF_USERNAME],
             CONF_ACCESS_TOKEN: auth.authToken,
             CONF_TOKEN: auth.refreshToken,
@@ -70,7 +75,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._reauth_entry:
             self.hass.config_entries.async_update_entry(
                 self._reauth_entry,
-                data=data,
+                data={**self._reauth_entry.data, **data},
             )
 
             self.hass.async_create_task(
@@ -90,15 +95,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema = vol.Schema(
                 {
                     vol.Required(CONF_AUTHENTICATION): bool,
+                    vol.Required(CONF_COUNTRY, default=DEFAULT_COUNTRY): vol.In(SUPPORTED_COUNTRIES),
                 }
             )
 
             return self.async_show_form(step_id="user", data_schema=data_schema)
 
+        self._country = user_input[CONF_COUNTRY]
+
         if user_input[CONF_AUTHENTICATION]:
             return await self.async_step_login()
 
-        data = {}
+        data = {CONF_COUNTRY: self._country}
 
         return await self._async_create_entry(data)
 
