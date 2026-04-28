@@ -148,32 +148,71 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             LOGGER.info("No site reference configured; using public prices")
             return await self.api.prices(start_date, end_date)
 
+        user_prices = await self.__fetch_user_prices_with_public_fallback(
+            start_date,
+            end_date,
+        )
+
+        if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
+            # If user_prices are available for both gas and electricity return them
+            return user_prices
+
+        return await self.__merge_missing_user_prices_with_public(
+            start_date,
+            end_date,
+            user_prices,
+        )
+
+    async def __fetch_user_prices_with_public_fallback(
+        self,
+        start_date: date,
+        end_date: date,
+    ) -> MarketPrices:
         try:
-            user_prices = await self.api.user_prices(start_date, self.site_reference)
+            return await self.api.user_prices(start_date, self.site_reference)
         except RequestException as ex:
             LOGGER.warning(
                 "Failed to fetch user prices for site %s, falling back to public prices: %s",
                 self.site_reference,
                 ex,
             )
-            return await self.api.prices(start_date, end_date)
+            try:
+                return await self.api.prices(start_date, end_date)
+            except RequestException as public_ex:
+                if "request-error:request-not-supported-in-country" in str(public_ex):
+                    LOGGER.info(
+                        "Public prices are not supported in country for site %s",
+                        self.site_reference,
+                    )
+                raise
 
-        if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
-            # If user_prices are available for both gas and electricity return them
-            return user_prices
-        else:
+    async def __merge_missing_user_prices_with_public(
+        self,
+        start_date: date,
+        end_date: date,
+        user_prices: MarketPrices,
+    ) -> MarketPrices:
+        try:
             public_prices = await self.api.prices(start_date, end_date)
+        except RequestException as ex:
+            if "request-error:request-not-supported-in-country" in str(ex):
+                LOGGER.info(
+                    "Public prices are not supported in country for site %s, keeping user prices",
+                    self.site_reference,
+                )
+                return user_prices
+            raise
 
-            # Use public prices if no user prices are available
-            if len(user_prices.gas.all) == 0:
-                LOGGER.info("No gas prices found for user, falling back to public prices")
-                user_prices.gas = public_prices.gas
+        # Use public prices if no user prices are available
+        if len(user_prices.gas.all) == 0:
+            LOGGER.info("No gas prices found for user, falling back to public prices")
+            user_prices.gas = public_prices.gas
 
-            if len(user_prices.electricity.all) == 0:
-                LOGGER.info("No electricity prices found for user, falling back to public prices")
-                user_prices.electricity = public_prices.electricity
+        if len(user_prices.electricity.all) == 0:
+            LOGGER.info("No electricity prices found for user, falling back to public prices")
+            user_prices.electricity = public_prices.electricity
 
-            return user_prices
+        return user_prices
 
     async def __try_renew_token(self):
 
