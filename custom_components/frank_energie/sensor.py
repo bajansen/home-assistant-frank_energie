@@ -61,7 +61,7 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         name="Current electricity price (All-in)",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=2,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=None,
         value_fn=lambda data: data[DATA_ELECTRICITY].current_hour.total,
         attr_fn=lambda data: {"prices": data[DATA_ELECTRICITY].asdict("total")},
     ),
