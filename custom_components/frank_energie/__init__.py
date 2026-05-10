@@ -1,16 +1,20 @@
 """The Frank Energie component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from python_frank_energie import FrankEnergie
+from python_frank_energie.exceptions import RequestException
 
 from .const import CONF_COORDINATOR, DOMAIN
 from .coordinator import FrankEnergieCoordinator
 
 PLATFORMS = [Platform.SENSOR]
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -27,22 +31,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             auth_token=entry.data.get(CONF_ACCESS_TOKEN, None),
             refresh_token=entry.data.get(CONF_TOKEN, None),
         )
-        me = await api.me()
+        try:
+            me = await api.me()
+        except RequestException as ex:
+            LOGGER.warning(
+                "Failed to fetch account delivery site during setup (%s). "
+                "Continuing without site-specific data for now.",
+                ex,
+            )
+            me = None
 
-        # filter out all sites that are not in delivery
-        me.deliverySites = [site for site in me.deliverySites if site.status == "IN_DELIVERY"]
+        if me is not None:
+            # filter out all sites that are not in delivery
+            me.deliverySites = [site for site in me.deliverySites if site.status == "IN_DELIVERY"]
 
-        if len(me.deliverySites) == 0:
-            raise Exception("No suitable sites found for this account")
+            if len(me.deliverySites) == 0:
+                raise Exception("No suitable sites found for this account")
 
-        site = me.deliverySites[0]
-        hass.config_entries.async_update_entry(entry, data={**entry.data, "site_reference": site.reference})
+            site = me.deliverySites[0]
+            hass.config_entries.async_update_entry(entry, data={**entry.data, "site_reference": site.reference})
 
-        # Update title
-        title = f"{site.address_street} {site.address_houseNumber}"
-        if site.address_houseNumberAddition is not None:
-            title += f" {site.address_houseNumberAddition}"
-        hass.config_entries.async_update_entry(entry, title=title)
+            # Update title
+            title = f"{site.address_street} {site.address_houseNumber}"
+            if site.address_houseNumberAddition is not None:
+                title += f" {site.address_houseNumberAddition}"
+            hass.config_entries.async_update_entry(entry, title=title)
 
     # Initialise the coordinator and save it as domain-data
     api = FrankEnergie(

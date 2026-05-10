@@ -50,6 +50,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> FrankEnergieData:
         """Get the latest data from Frank Energie."""
         LOGGER.debug("Fetching Frank Energie data")
+        await self.__ensure_site_reference()
 
         # We request data for today up until the day after tomorrow.
         # This is to ensure we always request all available data.
@@ -64,10 +65,14 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
 
             data_month_summary = (
-                await self.api.month_summary(self.site_reference) if self.api.is_authenticated else None
+                await self.api.month_summary(self.site_reference)
+                if self.api.is_authenticated and self.site_reference
+                else None
             )
             data_invoices = (
-                await self.api.invoices(self.site_reference) if self.api.is_authenticated else None
+                await self.api.invoices(self.site_reference)
+                if self.api.is_authenticated and self.site_reference
+                else None
             )
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
@@ -99,7 +104,7 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         }
 
     async def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
-        if not self.api.is_authenticated:
+        if not self.api.is_authenticated or not self.site_reference:
             return await self.api.prices(start_date, end_date)
         else:
             user_prices = await self.api.user_prices(start_date, self.site_reference)
@@ -107,6 +112,33 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
                 # If user_prices are available for both gas and electricity return them
                 return user_prices
+
+    async def __ensure_site_reference(self) -> None:
+        """Resolve and persist site reference when missing.
+
+        The Frank account profile query can fail when upstream GraphQL changes.
+        In that case we keep operating with public prices and retry later.
+        """
+        if self.site_reference or not self.api.is_authenticated:
+            return
+
+        try:
+            me = await self.api.me()
+            delivery_sites = [site for site in me.deliverySites if site.status == "IN_DELIVERY"]
+            if not delivery_sites:
+                return
+
+            site = delivery_sites[0]
+            self.site_reference = site.reference
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data={**self.entry.data, "site_reference": site.reference},
+                title=f"{site.address_street} {site.address_houseNumber}"
+                + (f" {site.address_houseNumberAddition}" if site.address_houseNumberAddition else ""),
+            )
+            LOGGER.info("Recovered Frank Energie site reference, re-enabled personalized data")
+        except RequestException as ex:
+            LOGGER.debug("Could not resolve Frank Energie site reference yet: %s", ex)
             else:
                 public_prices = await self.api.prices(start_date, end_date)
 
