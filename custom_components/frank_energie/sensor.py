@@ -44,6 +44,32 @@ from .coordinator import FrankEnergieCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+NO_DATA_EXCEPTIONS = (
+    TypeError,
+    IndexError,
+    ValueError,
+    AttributeError,
+    ZeroDivisionError,
+)
+
+
+def _safe_value(value_fn: Callable[[dict], StateType], data: dict) -> StateType:
+    """Return a sensor value, or None if the API data is unavailable."""
+    try:
+        return value_fn(data)
+    except NO_DATA_EXCEPTIONS:
+        return None
+
+
+def _safe_attributes(
+    attr_fn: Callable[[dict], dict[str, StateType | list]], data: dict
+) -> dict[str, StateType | list]:
+    """Return sensor attributes, or an empty dict if the API data is unavailable."""
+    try:
+        return attr_fn(data)
+    except NO_DATA_EXCEPTIONS:
+        return {}
+
 
 @dataclass
 class FrankEnergieEntityDescription(SensorEntityDescription):
@@ -358,13 +384,10 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     async def async_update(self) -> None:
         """Get the latest data and updates the states."""
-        try:
-            self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator.data
-            )
-        except (TypeError, IndexError, ValueError):
-            # No data available
-            self._attr_native_value = None
+        self._attr_native_value = _safe_value(
+            self.entity_description.value_fn,
+            self.coordinator.data,
+        )
 
         # Cancel the currently scheduled event if there is any
         if self._unsub_update:
@@ -390,7 +413,7 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self.entity_description.attr_fn(self.coordinator.data)
+        return _safe_attributes(self.entity_description.attr_fn, self.coordinator.data)
 
     @property
     def available(self) -> bool:
