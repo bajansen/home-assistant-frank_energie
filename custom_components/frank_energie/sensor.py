@@ -53,6 +53,24 @@ class FrankEnergieEntityDescription(SensorEntityDescription):
     service_name: str | None = SERVICE_NAME_PRICES
     value_fn: Callable[[dict], StateType] = None
     attr_fn: Callable[[dict], dict[str, StateType | list]] = lambda _: {}
+    # Tomorrow's prices are published around 13:15; until then these sensors
+    # report `unknown` rather than `unavailable`.
+    allow_none: bool = False
+
+
+def _total(price) -> float | None:
+    """Total price of a Price entry, or None when there is no entry."""
+    return price.total if price is not None else None
+
+
+def _from_time(price):
+    """Start time of a Price entry, or None when there is no entry."""
+    return price.date_from if price is not None else None
+
+
+def _as_attr(prices) -> list[dict]:
+    """Price entries in the format of the `prices` attribute."""
+    return [{"from": str(p.date_from), "till": str(p.date_till), "price": round(p.total, 3)} for p in prices]
 
 
 SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
@@ -209,6 +227,48 @@ SENSOR_TYPES: tuple[FrankEnergieEntityDescription, ...] = (
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data[DATA_ELECTRICITY].today_avg,
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tomorrow_min",
+        name="Lowest energy price tomorrow",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        allow_none=True,
+        value_fn=lambda data: _total(data[DATA_ELECTRICITY].tomorrow_min),
+        attr_fn=lambda data: {ATTR_TIME: _from_time(data[DATA_ELECTRICITY].tomorrow_min)},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tomorrow_max",
+        name="Highest energy price tomorrow",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        allow_none=True,
+        value_fn=lambda data: _total(data[DATA_ELECTRICITY].tomorrow_max),
+        attr_fn=lambda data: {ATTR_TIME: _from_time(data[DATA_ELECTRICITY].tomorrow_max)},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_tomorrow_avg",
+        name="Average electricity price tomorrow",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        allow_none=True,
+        value_fn=lambda data: (
+            round(sum(p.total for p in data[DATA_ELECTRICITY].tomorrow) / len(data[DATA_ELECTRICITY].tomorrow), 5)
+            if data[DATA_ELECTRICITY].tomorrow else None
+        ),
+        attr_fn=lambda data: {"prices": _as_attr(data[DATA_ELECTRICITY].tomorrow)},
+    ),
+    FrankEnergieEntityDescription(
+        key="elec_upcoming_min",
+        name="Lowest upcoming energy price",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: _total(data[DATA_ELECTRICITY].upcoming_min),
+        attr_fn=lambda data: {ATTR_TIME: _from_time(data[DATA_ELECTRICITY].upcoming_min)},
     ),
     FrankEnergieEntityDescription(
         key="actual_costs_until_last_meter_reading_date",
@@ -394,4 +454,6 @@ class FrankEnergieSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def available(self) -> bool:
+        if self.entity_description.allow_none:
+            return super().available
         return super().available and self.native_value is not None
