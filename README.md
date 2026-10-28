@@ -31,6 +31,13 @@ Indien je deze plugin al gebruikte en hebt ingesteld via `configuration.yaml` di
 
 Bij het instellen van de integratie wordt de mogelijkheid gegeven in te loggen met je Frank Energie-account. Inloggen is geen vereiste voor werking van deze integratie maar biedt de mogelijkheid om ook klantspecifieke gegevens op te halen. Op dit moment krijg je na inloggen naast de gebruikelijke tariefsensoren ook de beschikking over sensoren voor de verwachte en daadwerkelijke verbruikskosten voor de huidige maand.
 
+### Prijzen van morgen
+
+De prijzen van morgen worden rond 13:15 gepubliceerd en zitten vanaf dat moment ook in het `prices` attribuut van de huidige-prijs sensoren. Daarnaast zijn er aparte sensoren:
+
+- `sensor.lowest_energy_price_tomorrow`, `sensor.highest_energy_price_tomorrow` (met `from_time` attribuut) en `sensor.average_electricity_price_tomorrow` (met de prijzen van morgen als `prices` attribuut); deze zijn `unknown` tot de prijzen van morgen bekend zijn.
+- `sensor.lowest_upcoming_energy_price`: de laagste nog komende prijs van vandaag en morgen, met `from_time`.
+
 ### Gebruik
 
 Een aantal sensors hebben een `prices` attribuut die alle bekende prijzen bevat. Dit kan worden gebruikt om zelf met een template nieuwe sensors te maken.

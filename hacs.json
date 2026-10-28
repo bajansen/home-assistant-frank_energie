@@ -3,7 +3,5 @@
 	"country": "NL",
 	"domains": "sensor",
 	"render_readme": true,
-	"homeassistant": "2022.3.0",
-	"zip_release": true,
-	"filename": "frank_energie.zip"
+	"homeassistant": "2022.3.0"
 }

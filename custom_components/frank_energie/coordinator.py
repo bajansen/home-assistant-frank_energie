@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from python_frank_energie import FrankEnergie
-from python_frank_energie.exceptions import RequestException, AuthException
+from python_frank_energie.exceptions import RequestException, AuthException, NoMarketPricesAvailableException
 from python_frank_energie.models import PriceData, MonthSummary, Invoices, MarketPrices
 
 from .const import DATA_ELECTRICITY, DATA_GAS, DATA_MONTH_SUMMARY, DATA_INVOICES
@@ -61,7 +61,12 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         # because the gas prices response only contains data for the first day of the query
         try:
             prices_today = await self.__fetch_prices_with_fallback(today, tomorrow)
-            prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
+            try:
+                prices_tomorrow = await self.__fetch_prices_with_fallback(tomorrow, day_after_tomorrow)
+            except NoMarketPricesAvailableException:
+                # Prices for tomorrow are published around 13:00
+                LOGGER.debug("No prices available for tomorrow yet")
+                prices_tomorrow = None
 
             data_month_summary = (
                 await self.api.month_summary(self.site_reference) if self.api.is_authenticated else None
@@ -72,8 +77,8 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
         except UpdateFailed as err:
             # Check if we still have data to work with, if so, return this data. Still log the error as warning
             if (
-                self.data[DATA_ELECTRICITY].get_future_prices()
-                and self.data[DATA_GAS].get_future_prices()
+                self.data[DATA_ELECTRICITY].upcoming
+                and self.data[DATA_GAS].upcoming
             ):
                 LOGGER.warning(str(err))
                 return self.data
@@ -92,23 +97,25 @@ class FrankEnergieCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
 
         return {
-            DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity,
-            DATA_GAS: prices_today.gas + prices_tomorrow.gas,
+            DATA_ELECTRICITY: prices_today.electricity + prices_tomorrow.electricity if prices_tomorrow else prices_today.electricity,
+            DATA_GAS: prices_today.gas + prices_tomorrow.gas if prices_tomorrow else prices_today.gas,
             DATA_MONTH_SUMMARY: data_month_summary,
             DATA_INVOICES: data_invoices,
         }
 
     async def __fetch_prices_with_fallback(self, start_date: date, end_date: date) -> MarketPrices:
         if not self.api.is_authenticated:
-            return await self.api.prices(start_date, end_date)
+            return await self.api.prices(start_date, resolution="PT60M")
         else:
-            user_prices = await self.api.user_prices(start_date, self.site_reference)
+            user_prices = await self.api.user_prices(
+                self.site_reference, self.entry.data.get("country", "NL"), start_date, end_date, resolution="PT60M"
+            )
 
             if len(user_prices.gas.all) > 0 and len(user_prices.electricity.all) > 0:
                 # If user_prices are available for both gas and electricity return them
                 return user_prices
             else:
-                public_prices = await self.api.prices(start_date, end_date)
+                public_prices = await self.api.prices(start_date, resolution="PT60M")
 
                 # Use public prices if no user prices are available
                 if len(user_prices.gas.all) == 0:
